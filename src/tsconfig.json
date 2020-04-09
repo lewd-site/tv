@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "strict": true,
+    "target": "ES6"
+  },
+  "include": [
+    "resources/ts/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
