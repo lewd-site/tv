@@ -7,7 +7,14 @@
   </h1>
 
   <div class="header__buttons">
-    <a class="button" href="/login">Вход</a>
-    <a class="button" href="/register">Регистрация</a>
+    @if (Auth::check())
+    <form method="POST" action="/logout" enctype="multipart/form-data">
+      @csrf
+      <button type="submit" class="header__button button">Выйти</button>
+    </form>
+    @else
+    <a class="header__button button" href="/login">Вход</a>
+    <a class="header__button button" href="/register">Регистрация</a>
+    @endif
   </div>
 </nav>

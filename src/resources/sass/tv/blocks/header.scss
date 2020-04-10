@@ -1,0 +1,38 @@
+.header {
+  &__inner {
+    @extend %container, %row;
+
+    justify-content: space-between;
+    align-items: center;
+
+    height: 110px;
+  }
+
+  &__logo {
+    font-size: 46px;
+    font-weight: bold;
+  }
+
+  &__logo-link {
+    display: flex;
+    align-items: center;
+
+    & > :not(:last-child) {
+      margin-right: 10px;
+    }
+  }
+
+  &__logo-image {
+    height: 44px;
+    width: auto;
+  }
+
+  &__buttons > :not(:last-child) {
+    margin-right: 32px;
+  }
+
+  &__button {
+    font-size: 20px;
+    font-weight: bold;
+  }
+}

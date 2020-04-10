@@ -1,0 +1,7 @@
+.room-list-block {
+  @extend %container, %block;
+
+  flex: 1;
+
+  margin-bottom: 116px;
+}

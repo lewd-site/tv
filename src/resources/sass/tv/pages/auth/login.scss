@@ -1,0 +1,54 @@
+.login-form {
+  @extend %container, %container_narrow;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  flex: 1;
+
+  &__inner {
+    @extend %block;
+
+    position: relative;
+    width: 100%;
+
+    text-align: center;
+  }
+
+  &__title {
+    margin-bottom: 64px;
+
+    font-size: 36px;
+    font-weight: bold;
+  }
+
+  &__email,
+  &__password {
+    margin: 0 auto 32px;
+
+    width: 418px;
+
+    .input {
+      width: 100%;
+    }
+  }
+
+  &__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+
+  &__d-1 {
+    position: absolute;
+    top: -42px;
+    left: -58px;
+  }
+
+  &__d-2 {
+    position: absolute;
+    bottom: -7px;
+    right: -33px;
+  }
+}

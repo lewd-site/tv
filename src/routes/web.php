@@ -15,7 +15,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::name('auth.')->group(function () {
   Route::get('/login', 'AuthController@login')->name('login');
+  Route::post('/login', 'AuthController@loginSubmit')->name('loginSubmit');
   Route::get('/register', 'AuthController@register')->name('register');
+  Route::post('/register', 'AuthController@registerSubmit')->name('registerSubmit');
+  Route::post('/logout', 'AuthController@logout')->name('logout');
 });
 
 Route::name('rooms.')->group(function () {

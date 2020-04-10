@@ -1,0 +1,60 @@
+.create-room-block {
+  @extend %container-wrapper;
+
+  margin-bottom: 64px;
+
+  &__inner {
+    @extend %container, %row;
+
+    align-items: center;
+
+    height: 601px;
+  }
+
+  &__left {
+    @extend %col-40;
+  }
+
+  &__title {
+    font-size: 40px;
+    font-weight: 500;
+
+    margin-bottom: 32px;
+  }
+
+  &__text {
+    font-size: 25px;
+
+    margin-bottom: 48px;
+  }
+
+  &__submit {
+    border-radius: 62px;
+
+    height: 123px;
+    padding: 0 116px;
+
+    font-size: 24px;
+    font-weight: bold;
+  }
+
+  &__right {
+    @extend %col-60;
+
+    position: relative;
+
+    height: 100%;
+  }
+
+  &__image {
+    position: absolute;
+    top: 29px;
+    left: 50px;
+  }
+
+  &__image-overlay {
+    position: absolute;
+    top: 79px;
+    left: 117px;
+  }
+}

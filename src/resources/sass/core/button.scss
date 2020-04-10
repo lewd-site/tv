@@ -1,0 +1,32 @@
+.button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+
+  border: 1px solid $white;
+  border-radius: 20px;
+
+  height: 46px;
+  padding: 0 40px;
+
+  font-size: 20px;
+  font-weight: normal;
+
+  &_primary {
+    border: 0;
+    background: linear-gradient(186deg, #E3833E 28%, #942FD1 100%);
+  }
+
+  &_secondary {
+    border-color: #E3833E;
+  }
+
+  &_large {
+    border-radius: 50px;
+
+    height: 88px;
+    padding: 0 65px;
+
+    font-size: 16px;
+  }
+}
