@@ -4,4 +4,42 @@
   flex: 1;
 
   margin-bottom: 116px;
+  padding: 48px;
+
+  &__item {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+
+    background: #252525;
+    border-radius: 5px;
+
+    height: 78px;
+    padding: 0 64px 0 24px;
+
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  &__list {
+    & > :not(:last-child) {
+      margin-bottom: 24px;
+    }
+  }
+
+  &__name {
+    width: 150px;
+  }
+
+  &__enter {
+    display: block;
+
+    background: url('/images/play.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+
+    margin-left: 791px;
+    width: 30px;
+    height: 30px;
+  }
 }

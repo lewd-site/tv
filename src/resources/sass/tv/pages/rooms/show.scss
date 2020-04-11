@@ -1,0 +1,22 @@
+.room {
+  @extend %container;
+
+  display: flex;
+  justify-content: center;
+
+  flex: 1;
+
+  margin-bottom: 64px;
+
+  &__inner {
+    @extend %block, %row;
+
+    width: 100%;
+    padding: 48px;
+  }
+
+  &__name {
+    font-size: 25px;
+    font-weight: 500;
+  }
+}

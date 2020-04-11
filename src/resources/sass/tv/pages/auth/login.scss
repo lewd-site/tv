@@ -25,6 +25,8 @@
 
   &__email,
   &__password {
+    position: relative;
+
     margin: 0 auto 32px;
 
     width: 418px;
@@ -38,17 +40,27 @@
     position: absolute;
     top: 16px;
     right: 16px;
+
+    line-height: 0;
+
+    user-select: none;
   }
 
   &__d-1 {
     position: absolute;
     top: -42px;
     left: -58px;
+
+    pointer-events: none;
+    user-select: none;
   }
 
   &__d-2 {
     position: absolute;
-    bottom: -7px;
+    bottom: -15px;
     right: -33px;
+
+    pointer-events: none;
+    user-select: none;
   }
 }

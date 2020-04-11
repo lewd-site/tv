@@ -11,6 +11,8 @@
   &__logo {
     font-size: 46px;
     font-weight: bold;
+
+    user-select: none;
   }
 
   &__logo-link {
@@ -27,11 +29,17 @@
     width: auto;
   }
 
-  &__buttons > :not(:last-child) {
-    margin-right: 32px;
+  &__buttons {
+    user-select: none;
+
+    & > :not(:last-child) {
+      margin-right: 32px;
+    }
   }
 
   &__button {
+    @extend %button;
+
     font-size: 20px;
     font-weight: bold;
   }

@@ -1,0 +1,7 @@
+.footer {
+  @extend %container-wrapper;
+
+  &__inner {
+    @extend %container;
+  }
+}

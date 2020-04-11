@@ -1,3 +1,14 @@
+@prepend('styles')
+<link rel="stylesheet" href="/css/app.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,500,700&display=swap&subset=cyrillic" />
+@endprepend
+
+@prepend('scripts')
+<script src="/js/manifest.js"></script>
+<script src="/js/vendor.js"></script>
+<script src="/js/app.js"></script>
+@endprepend
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -7,8 +18,7 @@
 
   <title>@yield('title')</title>
 
-  <link rel="stylesheet" href="/css/app.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,500,700&display=swap&subset=cyrillic" />
+  @stack('styles')
 </head>
 
 <body>
@@ -18,9 +28,7 @@
 
   @yield('content')
 
-  <script src="/js/manifest.js"></script>
-  <script src="/js/vendor.js"></script>
-  <script src="/js/app.js"></script>
+  @stack('scripts')
 </body>
 
 </html>

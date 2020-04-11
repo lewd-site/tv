@@ -12,5 +12,6 @@ const mix = require('laravel-mix');
  */
 
 mix.ts('resources/ts/app.ts', 'public/js')
+  .ts('resources/ts/register.ts', 'public/js')
   .sass('resources/sass/app.scss', 'public/css')
   .extract(['axios']);

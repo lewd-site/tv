@@ -19,7 +19,7 @@ class AuthController extends Controller
   /**
    * Returns login form.
    */
-  public function login(Request $request)
+  public function login()
   {
     return view('auth.login');
   }
@@ -36,7 +36,7 @@ class AuthController extends Controller
 
     if (!Auth::attempt($credentials)) {
       return redirect()->back()->withErrors([
-        'user' => 'User not found or password is incorrect',
+        'email' => 'User not found or password is incorrect',
       ]);
     }
 
@@ -46,7 +46,7 @@ class AuthController extends Controller
   /**
    * Returns register form.
    */
-  public function register(Request $request)
+  public function register()
   {
     return view('auth.register');
   }
@@ -69,7 +69,7 @@ class AuthController extends Controller
         $credentials['password']
       );
     } catch (ConflictHttpException $e) {
-      return redirect()->back()->withErrors(['user' => $e->getMessage()]);
+      return redirect()->back()->withErrors(['name' => $e->getMessage()]);
     }
 
     Auth::login($user);

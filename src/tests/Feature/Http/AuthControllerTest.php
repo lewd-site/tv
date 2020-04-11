@@ -65,7 +65,7 @@ class AuthControllerTest extends TestCase
     ]);
 
     $response->assertRedirect();
-    $response->assertSessionHasErrors(['user']);
+    $response->assertSessionHasErrors(['email']);
     $this->assertGuest();
   }
 
@@ -79,7 +79,7 @@ class AuthControllerTest extends TestCase
     ]);
 
     $response->assertRedirect();
-    $response->assertSessionHasErrors(['user']);
+    $response->assertSessionHasErrors(['email']);
     $this->assertGuest();
   }
 
@@ -157,7 +157,7 @@ class AuthControllerTest extends TestCase
     ]);
 
     $response->assertRedirect();
-    $response->assertSessionHasErrors(['user']);
+    $response->assertSessionHasErrors(['name']);
     $this->assertGuest();
   }
 

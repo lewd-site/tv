@@ -29,6 +29,8 @@
   }
 
   &__submit {
+    @extend %button, %button_primary, %button_large;
+
     border-radius: 62px;
 
     height: 123px;
@@ -50,11 +52,17 @@
     position: absolute;
     top: 29px;
     left: 50px;
+
+    pointer-events: none;
+    user-select: none;
   }
 
   &__image-overlay {
     position: absolute;
     top: 79px;
     left: 117px;
+
+    pointer-events: none;
+    user-select: none;
   }
 }
