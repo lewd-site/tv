@@ -175,6 +175,6 @@ class AuthControllerTest extends TestCase
   {
     $response = $this->post('/logout');
 
-    $response->assertRedirect(route('rooms.list'));
+    $response->assertRedirect(route('auth.login'));
   }
 }
