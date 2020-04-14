@@ -16,6 +16,7 @@
     <div class="register-form__name">
       <input type="text" class="input" name="name" required placeholder="имя пользователя" />
       <span class="input-icon"></span>
+      <span class="input-label">имя пользователя</span>
 
       @error('name')
       <span class="input-error">{{ $message }}</span>
@@ -25,6 +26,7 @@
     <div class="register-form__email">
       <input type="email" class="input" name="email" required placeholder="e-mail" />
       <span class="input-icon"></span>
+      <span class="input-label">e-mail</span>
 
       @error('email')
       <span class="input-error">{{ $message }}</span>
@@ -34,6 +36,7 @@
     <div class="register-form__password">
       <input type="password" class="input" name="password" required minlength="8" placeholder="пароль" />
       <span class="input-icon"></span>
+      <span class="input-label">пароль</span>
 
       @error('password')
       <span class="input-error">{{ $message }}</span>
@@ -43,6 +46,7 @@
     <div class="register-form__confirm-password">
       <input type="password" class="input" name="confirm-password" required minlength="8" placeholder="повторите пароль" />
       <span class="input-icon"></span>
+      <span class="input-label">повторите пароль</span>
 
       @error('confirm-password')
       <span class="input-error">{{ $message }}</span>

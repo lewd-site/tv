@@ -22,11 +22,15 @@
 </head>
 
 <body>
-  <header>
+  <header class="header">
     @include('header')
   </header>
 
   @yield('content')
+
+  <footer class="footer">
+    @include('footer')
+  </footer>
 
   @stack('scripts')
 </body>

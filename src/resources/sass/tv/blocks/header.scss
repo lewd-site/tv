@@ -1,11 +1,15 @@
 .header {
+  @extend %container-wrapper;
+
+  margin-bottom: 32px;
+
   &__inner {
     @extend %container, %row;
 
     justify-content: space-between;
     align-items: center;
 
-    height: 110px;
+    height: 100px;
   }
 
   &__logo {

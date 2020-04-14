@@ -22,6 +22,7 @@ body {
   flex-flow: column nowrap;
 
   min-height: 100vh;
+  overflow-x: hidden;
   overflow-y: scroll;
 }
 
@@ -37,9 +38,7 @@ a {
   color: inherit;
   text-decoration: none;
 
-  &:focus {
-    outline: 1px dotted;
-  }
+  outline: none;
 }
 
 button {

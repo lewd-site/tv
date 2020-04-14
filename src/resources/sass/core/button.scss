@@ -13,12 +13,9 @@
   font-size: 20px;
   font-weight: normal;
 
+  outline: none;
   cursor: pointer;
   user-select: none;
-
-  &:focus {
-    outline: 1px dotted;
-  }
 
   &_primary {
     border: 0;

@@ -17,7 +17,6 @@
 
     <section class="create-room-block__right">
       <img class="create-room-block__image" src="/images/create-room.svg" />
-      <img class="create-room-block__image-overlay" src="/images/create-room.png" />
     </section>
   </div>
 </section>
@@ -32,9 +31,4 @@
     @endforeach
   </ul>
 </main>
-
-<footer class="footer">
-  <div class="footer__inner">
-  </div>
-</footer>
 @endsection

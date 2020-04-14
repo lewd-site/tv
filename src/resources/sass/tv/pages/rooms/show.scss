@@ -2,14 +2,16 @@
   @extend %container;
 
   display: flex;
+  flex-flow: column nowrap;
   justify-content: center;
+  align-items: center;
 
   flex: 1;
 
   margin-bottom: 64px;
 
   &__inner {
-    @extend %block, %row;
+    @extend %block;
 
     width: 100%;
     padding: 48px;

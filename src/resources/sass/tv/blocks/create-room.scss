@@ -1,14 +1,12 @@
 .create-room-block {
-  @extend %container-wrapper;
-
-  margin-bottom: 64px;
+  margin-bottom: 32px;
 
   &__inner {
     @extend %container, %row;
 
     align-items: center;
 
-    height: 601px;
+    height: 543px;
   }
 
   &__left {
@@ -50,17 +48,8 @@
 
   &__image {
     position: absolute;
-    top: 29px;
-    left: 50px;
-
-    pointer-events: none;
-    user-select: none;
-  }
-
-  &__image-overlay {
-    position: absolute;
-    top: 79px;
-    left: 117px;
+    top: 0;
+    left: 0;
 
     pointer-events: none;
     user-select: none;

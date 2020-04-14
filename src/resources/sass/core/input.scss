@@ -14,8 +14,16 @@
   height: 46px;
   padding: 0 25px;
 
+  filter: unset;
+  outline: none;
+
   &:focus {
     border-color: #8a8a8a;
+  }
+
+  &:-webkit-autofill {
+    transition-delay: 1e9s;
+    transition-property: background-color, color;
   }
 
   &:-moz-submit-invalid {
@@ -28,6 +36,22 @@
 
   &:invalid {
     box-shadow: none;
+  }
+
+  &:required:not(:placeholder-shown):invalid ~ .input-icon {
+    display: block;
+
+    background: url('/images/error.svg');
+  }
+
+  &:required:not(:placeholder-shown):valid ~ .input-icon {
+    display: block;
+
+    background: url('/images/ok.svg');
+  }
+
+  &:not(:placeholder-shown) ~ .input-label {
+    display: block;
   }
 }
 
@@ -47,19 +71,20 @@
   user-select: none;
 }
 
-%input,
-.input {
-  &:required:not(:placeholder-shown):invalid ~ .input-icon {
-    display: block;
+.input-label {
+  position: absolute;
+  top: -5px;
+  left: 40px;
 
-    background: url('/images/error.svg');
-  }
+  display: none;
 
-  &:required:not(:placeholder-shown):valid ~ .input-icon {
-    display: block;
+  background: linear-gradient(to bottom, transparent 30%, #2a2a2a 30%);
+  color: #8F8F8F;
 
-    background: url('/images/ok.svg');
-  }
+  padding: 0 8px;
+
+  font-size: 10px;
+  font-weight: 500;
 }
 
 .input-error {

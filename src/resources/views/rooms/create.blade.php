@@ -13,6 +13,7 @@
       <div class="create-room__name">
         <input type="text" class="input" name="name" required placeholder="название" />
         <span class="input-icon"></span>
+        <span class="input-label">название</span>
 
         @error('name')
         <span class="input-error">{{ $message }}</span>
@@ -26,6 +27,7 @@
           <div class="create-room__playlist-link">
             <input type="text" class="input" name="playlist[0]" placeholder="ссылка на видео" />
             <span class="input-icon"></span>
+            <span class="input-label">ссылка на видео</span>
           </div>
 
           <button class="create-room__playlist-edit" type="button"></button>
@@ -47,6 +49,7 @@
       <div class="create-room__url">
         <input type="text" class="input" name="url" required pattern="[A-Za-z0-9_-]+" placeholder="id" />
         <span class="input-icon"></span>
+        <span class="input-label">id</span>
 
         @error('url')
         <span class="input-error">{{ $message }}</span>
