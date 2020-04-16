@@ -1,0 +1,99 @@
+%input,
+.input {
+  background: #2a2a2a;
+  color: #8F8F8F;
+
+  border: 3px solid #3f3f3f;
+  border-radius: 20px;
+
+  transition: border 0.1s linear;
+
+  font-size: 16px;
+  font-weight: 500;
+
+  height: 46px;
+  padding: 0 25px;
+
+  filter: unset;
+  outline: none;
+
+  &:focus {
+    border-color: #8a8a8a;
+  }
+
+  &:-webkit-autofill {
+    transition-delay: 1e9s;
+    transition-property: background-color, color;
+  }
+
+  &:-moz-submit-invalid {
+    box-shadow: none;
+  }
+
+  &:-moz-ui-invalid {
+    box-shadow: none;
+  }
+
+  &:invalid {
+    box-shadow: none;
+  }
+
+  &:required:not(:placeholder-shown):invalid ~ .input-icon {
+    display: block;
+
+    background: url('/images/error.svg');
+  }
+
+  &:required:not(:placeholder-shown):valid ~ .input-icon {
+    display: block;
+
+    background: url('/images/ok.svg');
+  }
+
+  &:not(:placeholder-shown) ~ .input-label {
+    display: block;
+  }
+
+  &-icon {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+
+    transform: translate(0, -50%);
+
+    display: none;
+
+    width: 20px;
+    height: 20px;
+
+    pointer-events: none;
+    user-select: none;
+  }
+
+  &-label {
+    position: absolute;
+    top: -5px;
+    left: 40px;
+
+    display: none;
+
+    background: linear-gradient(to bottom, transparent 30%, #2a2a2a 30%);
+    color: #8F8F8F;
+
+    padding: 0 8px;
+
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  &-error {
+    position: absolute;
+    bottom: -20px;
+    left: 40px;
+
+    color: #EB5757;
+
+    font-size: 10px;
+    font-weight: 500;
+  }
+}

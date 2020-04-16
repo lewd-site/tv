@@ -21,7 +21,7 @@ class RoomController extends Controller
   {
     $rooms = Room::all();
 
-    return view('rooms.list', ['rooms' => $rooms]);
+    return view('rooms.pages.list', ['rooms' => $rooms]);
   }
 
   public function show($url)
@@ -31,7 +31,7 @@ class RoomController extends Controller
       abort(404);
     }
 
-    return view('rooms.show', [
+    return view('rooms.pages.show', [
       'room'  => $room,
       'owner' => $room->owner,
     ]);
@@ -39,7 +39,7 @@ class RoomController extends Controller
 
   public function create()
   {
-    return view('rooms.create');
+    return view('rooms.pages.create');
   }
 
   public function createSubmit(Request $request)

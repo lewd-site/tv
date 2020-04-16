@@ -1,0 +1,8 @@
+.room-page {
+  &__room {
+    @extend %container, %block;
+
+    margin-bottom: 32px;
+    padding: 48px;
+  }
+}

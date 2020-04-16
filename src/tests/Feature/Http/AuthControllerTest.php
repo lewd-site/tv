@@ -16,7 +16,7 @@ class AuthControllerTest extends TestCase
     $response = $this->get('/login');
 
     $response->assertSuccessful();
-    $response->assertViewIs('auth.login');
+    $response->assertViewIs('auth.pages.login');
   }
 
   public function test_loginSubmit(): void
@@ -88,7 +88,7 @@ class AuthControllerTest extends TestCase
     $response = $this->get('/register');
 
     $response->assertSuccessful();
-    $response->assertViewIs('auth.register');
+    $response->assertViewIs('auth.pages.register');
   }
 
   public function test_registerSubmit(): void

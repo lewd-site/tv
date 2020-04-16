@@ -16,7 +16,7 @@ class RoomControllerTest extends TestCase
     $response = $this->get('/');
 
     $response->assertSuccessful();
-    $response->assertViewIs('rooms.list');
+    $response->assertViewIs('rooms.pages.list');
   }
 
   public function test_show(): void
@@ -27,7 +27,7 @@ class RoomControllerTest extends TestCase
     $response = $this->get("/$url");
 
     $response->assertSuccessful();
-    $response->assertViewIs('rooms.show');
+    $response->assertViewIs('rooms.pages.show');
   }
 
   public function test_create(): void
@@ -37,7 +37,7 @@ class RoomControllerTest extends TestCase
     $response = $this->actingAs($user)->get('/create');
 
     $response->assertSuccessful();
-    $response->assertViewIs('rooms.create');
+    $response->assertViewIs('rooms.pages.create');
   }
 
   public function test_create_guest(): void
