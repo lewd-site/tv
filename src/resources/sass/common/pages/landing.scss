@@ -1,0 +1,27 @@
+.landing-page {
+  &__top-cta {
+    @extend %container;
+
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+
+    height: 434px;
+  }
+
+  &__info {
+    @extend %container-wrapper;
+  }
+
+  &__bottom-cta {
+    @extend %container;
+
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+
+    height: 442px;
+  }
+}

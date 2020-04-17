@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::name('common.')->group(function () {
+  Route::get('/', 'CommonController@landing')->name('landing');
+  Route::get('/about', 'CommonController@about')->name('about');
+  Route::get('/contact', 'CommonController@contact')->name('contact');
+  Route::get('/donate', 'CommonController@donate')->name('donate');
+});
+
 Route::name('auth.')->group(function () {
   Route::get('/login', 'AuthController@login')->name('login');
   Route::post('/login', 'AuthController@loginSubmit')->name('loginSubmit');
@@ -24,10 +31,9 @@ Route::name('auth.')->group(function () {
 });
 
 Route::name('rooms.')->group(function () {
-  Route::get('/', 'RoomController@list')->name('list');
-
   Route::get('/create', 'RoomController@create')->name('create')->middleware('auth');
   Route::post('/create', 'RoomController@createSubmit')->name('createSubmit')->middleware('auth');
 
+  Route::get('/rooms', 'RoomController@list')->name('list');
   Route::get('/{url}', 'RoomController@show')->name('show');
 });

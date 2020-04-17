@@ -1,12 +1,29 @@
 .room-list-page {
-  &__create-room {
-    margin-bottom: 32px;
-  }
-
   &__room-list {
     @extend %container, %block;
 
+    margin-top: 74px;
     margin-bottom: 32px;
     padding: 48px;
+  }
+
+  &__buttons {
+    @extend %container, %row;
+
+    justify-content: flex-end;
+  }
+
+  &__button {
+    @extend %button, %button_large, %button_secondary;
+
+    border-width: 2px;
+
+    font-size: 24px;
+    font-weight: bold;
+
+    margin-bottom: 32px;
+
+    width: 370px;
+    height: 100px;
   }
 }

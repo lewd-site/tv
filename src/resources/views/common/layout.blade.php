@@ -22,15 +22,19 @@
 </head>
 
 <body class="layout">
+  @section('headers')
   <header class="layout__header header">
     @include('common.blocks.header')
   </header>
+  @show
 
   @yield('content')
 
+  @section('footer')
   <footer class="layout__footer footer">
     @include('common.blocks.footer')
   </footer>
+  @show
 
   @stack('scripts')
 </body>

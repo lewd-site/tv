@@ -1,13 +1,11 @@
 .footer {
-  @extend %container-wrapper;
-
   &__inner {
     @extend %container, %row;
 
     justify-content: space-between;
     align-items: center;
 
-    height: 111px;
+    height: 88px;
   }
 
   &__left {
@@ -17,6 +15,28 @@
   }
 
   &__left-image {
+    margin-right: 16px;
+
+    height: 36px;
+    width: auto;
+
+    pointer-events: none;
+    user-select: none;
+  }
+
+  &__center {
+    & > :not(:last-child) {
+      margin-right: 16px;
+    }
+  }
+
+  &__right {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+  }
+
+  &__right-image {
     margin-right: 16px;
 
     height: 36px;

@@ -1,0 +1,18 @@
+.about-page {
+  &__about {
+    @extend %container, %block;
+
+    margin-top: 32px;
+    max-width: 766px;
+    padding: 48px 96px 28px 48px;
+  }
+
+  &__image {
+    display: block;
+
+    margin: 20px auto;
+
+    pointer-events: none;
+    user-select: none;
+  }
+}

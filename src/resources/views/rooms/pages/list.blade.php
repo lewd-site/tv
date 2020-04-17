@@ -4,12 +4,12 @@
 
 @section('content')
 <main class="layout__main room-list-page">
-  <section class="room-list-page__create-room create-room-cta">
-  @include('rooms.blocks.create-cta')
-  </section>
-
   <section class="room-list-page__room-list room-list">
   @include('rooms.blocks.list')
   </section>
+
+  <div class="room-list-page__buttons">
+    <a class="room-list-page__button" href="{{ route('rooms.create') }}">Создать комнату</a>
+  </div>
 </main>
 @endsection

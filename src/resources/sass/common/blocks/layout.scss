@@ -6,15 +6,7 @@
   overflow-x: hidden;
   overflow-y: scroll;
 
-  &__header {
-    margin-bottom: 32px;
-  }
-
   &__main {
     flex: 1;
-  }
-
-  &__footer {
-    margin-top: 32px;
   }
 }

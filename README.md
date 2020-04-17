@@ -6,7 +6,6 @@
 - Run docker-compose.
 
 ```sh
-export UID # Used to run php-fpm with host user's file permissions
 docker-compose up --build
 ```
 
@@ -27,7 +26,6 @@ yarn dev
 
 ```sh
 cd ..
-export UID
 docker-compose exec php-fpm sh
 cp .env.example .env
 composer install

@@ -1,0 +1,9 @@
+.contact-page {
+  &__contact {
+    @extend %container, %block;
+
+    margin-top: 32px;
+    max-width: 766px;
+    padding: 48px 96px 28px 48px;
+  }
+}

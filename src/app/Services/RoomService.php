@@ -17,7 +17,19 @@ class RoomService
   {
     static $reserved = [];
     if (empty($reserved)) {
-      $reserved = ['admin', 'api', 'register', 'login', 'logout', 'create', 'users'];
+      $reserved = [
+        'about',
+        'admin',
+        'api',
+        'contact',
+        'create',
+        'donate',
+        'login',
+        'logout',
+        'register',
+        'rooms',
+        'users',
+      ];
     }
 
     if (in_array($url, $reserved)) {

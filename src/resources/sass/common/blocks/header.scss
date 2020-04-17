@@ -1,6 +1,4 @@
 .header {
-  @extend %container-wrapper;
-
   &__inner {
     @extend %container, %row;
 
@@ -11,24 +9,26 @@
   }
 
   &__logo {
-    font-size: 46px;
-    font-weight: bold;
+    display: block;
+  }
+
+  &__logo-image {
+    display: block;
+
+    height: 36px;
+    width: auto;
 
     user-select: none;
   }
 
-  &__logo-link {
-    display: flex;
-    align-items: center;
-
+  &__center {
     & > :not(:last-child) {
-      margin-right: 10px;
+      margin-right: 80px;
     }
   }
 
-  &__logo-image {
-    height: 44px;
-    width: auto;
+  &__link {
+    font-weight: bold;
   }
 
   &__right {
@@ -42,7 +42,10 @@
   &__button {
     @extend %button;
 
-    font-size: 20px;
+    height: 36px;
+    padding: 0 24px;
+
+    font-size: 16px;
     font-weight: bold;
   }
 }
