@@ -1,6 +1,6 @@
 <div class="user-header__inner">
   <div class="user-header__avatar">
-    <img class="user-header__avatar-image" data-draggable="false" />
+    <img class="user-header__avatar-image" src="https://www.gravatar.com/avatar/{{ md5(strtolower($user->email)) }}.jpg?s=170&d=mp" data-draggable="false" />
   </div>
 
   <div class="user-header__info">

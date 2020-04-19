@@ -6,7 +6,7 @@
 
     <div class="room-video__info">
       <div class="room-video__avatar">
-        <img class="room-video__avatar-image" data-draggable="false" />
+        <img class="room-video__avatar-image" src="https://www.gravatar.com/avatar/{{ md5(strtolower($room->owner->email)) }}.jpg?s=72&d=mp" data-draggable="false" />
       </div>
 
       <h3 class="room-video__subtitle">

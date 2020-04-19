@@ -17,7 +17,7 @@
     <a class="header__name" href="{{ route('users.show', ['id' => Auth::id()]) }}" data-draggable="false">{{ Auth::user()->name }}</a>
 
     <div class="header__avatar">
-      <img class="header__avatar-image" data-draggable="false" />
+      <img class="header__avatar-image" src="https://www.gravatar.com/avatar/{{ md5(strtolower(Auth::user()->email)) }}.jpg?s=32&d=mp" data-draggable="false" />
     </div>
 
     <div class="header__menu">
