@@ -9,6 +9,8 @@
 
   &__inner {
     @extend %row;
+
+    flex: 1;
   }
 
   &__left {

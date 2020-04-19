@@ -1,0 +1,40 @@
+.room-playlist {
+  &__title {
+    font-size: 30px;
+    font-weight: 500;
+
+    margin: 8px 0 54px 24px;
+  }
+
+  &__item {
+    @extend %row;
+
+    align-items: center;
+
+    background: $gray-15;
+    border-radius: 5px;
+
+    margin-bottom: 24px;
+
+    height: 74px;
+
+    padding: 0 24px;
+
+    font-weight: 500;
+  }
+
+  &__add {
+    background: url('/images/add.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+
+    border: 0;
+    border-radius: 50%;
+
+    width: 37px;
+    height: 37px;
+
+    cursor: pointer;
+    outline: none;
+  }
+}

@@ -6,7 +6,7 @@
 
   <div class="footer__center">
     <a class="footer__link" href="{{ route('common.landing') }}" data-draggable="false">Главная</a>
-    <a class="footer__link" href="{{ route('rooms.list') }}"" data-draggable="false">Комнаты</a>
+    <a class="footer__link" href="{{ route('rooms.list') }}" data-draggable="false">Комнаты</a>
     <a class="footer__link" href="{{ route('common.about') }}" data-draggable="false">О сайте</a>
     <a class="footer__link" href="{{ route('common.donate') }}" data-draggable="false">Поддержать</a>
   </div>

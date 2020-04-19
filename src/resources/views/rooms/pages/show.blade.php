@@ -4,8 +4,12 @@
 
 @section('content')
 <main class="layout__main room-page">
-  <section class="room-page__room room">
-  @include('rooms.blocks.show')
+  <section class="room-page__video room-video">
+  @include('rooms.blocks.video')
+  </section>
+
+  <section class="room-page__playlist room-playlist">
+  @include('rooms.blocks.playlist')
   </section>
 </main>
 @endsection

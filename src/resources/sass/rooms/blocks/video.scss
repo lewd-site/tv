@@ -1,0 +1,79 @@
+.room-video {
+  &__inner {
+    @extend %row;
+  }
+
+  &__main {
+    flex: 0 0 854px;
+
+    margin-right: 16px;
+  }
+
+  &__player {
+    margin-bottom: 32px;
+
+    width: 854px;
+    height: 480px;
+
+    background: $gray-15;
+    border-radius: 3px;
+  }
+
+  &__info {
+    @extend %row;
+
+    z-index: 1;
+  }
+
+  &__avatar {
+    position: relative;
+
+    background: #9631CD;
+    border-radius: 5px;
+
+    margin: 6px 10px 0 6px;
+
+    width: 72px;
+    height: 72px;
+
+    pointer-events: none;
+    user-select: none;
+  }
+
+  &__avatar-image {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+
+    display: block;
+
+    background: #C4C4C4;
+    border-radius: 5px;
+
+    width: 72px;
+    height: 72px;
+  }
+
+  &__title {
+    font-size: 30px;
+    font-weight: 500;
+
+    &:not(:empty) {
+      margin-bottom: 32px;
+    }
+  }
+
+  &__subtitle {
+    font-size: 25px;
+    font-weight: 500;
+  }
+
+  &__chat {
+    flex: 1;
+
+    background: $gray-15;
+    border-radius: 5px;
+
+    padding: 16px;
+  }
+}

@@ -1,5 +1,13 @@
 .room-page {
-  &__room {
+  &__video {
+    @extend %container, %block;
+
+    margin-top: 32px;
+    margin-bottom: 32px;
+    padding: 48px;
+  }
+
+  &__playlist {
     @extend %container, %block;
 
     margin-bottom: 32px;
