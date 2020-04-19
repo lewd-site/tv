@@ -26,15 +26,12 @@ class RoomController extends Controller
 
   public function show($url)
   {
-    $room = Room::where(['url' => $url])->first();
+    $room = Room::with('owner')->where(['url' => $url])->first();
     if (!isset($room)) {
       abort(404);
     }
 
-    return view('rooms.pages.show', [
-      'room'  => $room,
-      'owner' => $room->owner,
-    ]);
+    return view('rooms.pages.show', ['room' => $room]);
   }
 
   public function create()

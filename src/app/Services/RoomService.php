@@ -23,21 +23,24 @@ class RoomService
         'api',
         'contact',
         'create',
+        'delete',
         'donate',
+        'edit',
         'login',
         'logout',
         'register',
         'rooms',
+        'update',
         'users',
       ];
     }
 
     if (in_array($url, $reserved)) {
-      throw new BadRequestHttpException("URL $url is reserved");
+      throw new BadRequestHttpException("URL /$url is reserved");
     }
 
     if (!preg_match('/[A-Za-z0-9_-]+/', $url)) {
-      throw new BadRequestHttpException("URL $url should only contain alphanumeric and hyphens");
+      throw new BadRequestHttpException("URL should only contain alphanumeric and hyphens");
     }
 
     if (empty($name)) {
@@ -51,7 +54,7 @@ class RoomService
     /** @var ?Room */
     $room = Room::where('url', $url)->first();
     if (isset($room)) {
-      throw new ConflictHttpException("Room $url already exists");
+      throw new ConflictHttpException("Room /$url already exists");
     }
 
     return Room::create([
@@ -69,7 +72,7 @@ class RoomService
     /** @var ?Room */
     $room = Room::where('url', $url)->first();
     if (!isset($room)) {
-      throw new NotFoundHttpException("Room $url not found");
+      throw new NotFoundHttpException("Room /$url not found");
     }
 
     $room->delete();

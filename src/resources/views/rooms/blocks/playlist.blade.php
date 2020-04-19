@@ -1,5 +1,5 @@
 <div class="room-playlist__inner">
-  <h2 class="room-playlist__title">Playlist</h2>
+  <h2 class="room-playlist__title">Плейлист</h2>
 
   <ul class="room-playlist__list">
     <li class="room-playlist__item">

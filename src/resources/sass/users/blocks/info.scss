@@ -1,0 +1,29 @@
+.user-info {
+  &__title {
+    font-size: 25px;
+    font-weight: 500;
+
+    margin-bottom: 32px;
+  }
+
+  &__item {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+
+    background: #252525;
+    border-radius: 5px;
+
+    height: 52px;
+    padding: 0 24px;
+
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  &__list {
+    & > :not(:last-child) {
+      margin-bottom: 24px;
+    }
+  }
+}

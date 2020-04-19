@@ -1,0 +1,23 @@
+.user-page {
+  &__header {
+    @extend %container, %block;
+
+    margin-top: 32px;
+
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+
+    padding: 48px 48px 68px;
+  }
+
+  &__info {
+    @extend %container, %block;
+
+    margin-bottom: 32px;
+
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+
+    padding: 24px 48px 48px;
+  }
+}

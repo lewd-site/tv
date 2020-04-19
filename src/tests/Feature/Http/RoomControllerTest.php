@@ -13,7 +13,7 @@ class RoomControllerTest extends TestCase
 
   public function test_list(): void
   {
-    $response = $this->get('/');
+    $response = $this->get(route('rooms.list'));
 
     $response->assertSuccessful();
     $response->assertViewIs('rooms.pages.list');
@@ -24,25 +24,32 @@ class RoomControllerTest extends TestCase
     $url = 'anime';
     factory(Room::class)->create(['url' => $url]);
 
-    $response = $this->get("/$url");
+    $response = $this->get(route('rooms.show', ['url' => $url]));
 
     $response->assertSuccessful();
     $response->assertViewIs('rooms.pages.show');
+  }
+
+  public function test_show_notFound(): void
+  {
+    $response = $this->get(route('rooms.show', ['url' => 'anime']));
+
+    $response->assertNotFound();
   }
 
   public function test_create(): void
   {
     $user = factory(User::class)->create();
 
-    $response = $this->actingAs($user)->get('/create');
+    $response = $this->actingAs($user)->get(route('rooms.create'));
 
     $response->assertSuccessful();
     $response->assertViewIs('rooms.pages.create');
   }
 
-  public function test_create_guest(): void
+  public function test_create_asGuest(): void
   {
-    $response = $this->get('/create');
+    $response = $this->get(route('rooms.create'));
 
     $response->assertRedirect(route('auth.login'));
   }
@@ -53,7 +60,7 @@ class RoomControllerTest extends TestCase
     $name = 'Anime';
     $user = factory(User::class)->create();
 
-    $response = $this->actingAs($user)->post('/create', [
+    $response = $this->actingAs($user)->post(route('rooms.createSubmit'), [
       'url'  => $url,
       'name' => $name,
     ]);
@@ -67,9 +74,15 @@ class RoomControllerTest extends TestCase
     ]);
   }
 
-  public function test_createSubmit_guest(): void
+  public function test_createSubmit_asGuest(): void
   {
-    $response = $this->get('/create');
+    $url = 'anime';
+    $name = 'Anime';
+
+    $response = $this->post(route('rooms.createSubmit'), [
+      'url'  => $url,
+      'name' => $name,
+    ]);
 
     $response->assertRedirect(route('auth.login'));
   }

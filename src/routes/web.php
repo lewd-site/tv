@@ -30,6 +30,10 @@ Route::name('auth.')->group(function () {
   Route::post('/logout', 'AuthController@logout')->name('logout')->middleware('auth');
 });
 
+Route::name('users.')->group(function () {
+  Route::get('/users/{id}', 'UserController@show')->name('show');
+});
+
 Route::name('rooms.')->group(function () {
   Route::get('/create', 'RoomController@create')->name('create')->middleware('auth');
   Route::post('/create', 'RoomController@createSubmit')->name('createSubmit')->middleware('auth');

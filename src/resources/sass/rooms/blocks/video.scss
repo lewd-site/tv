@@ -64,8 +64,20 @@
   }
 
   &__subtitle {
+    @extend %row;
+
+    align-items: start;
+
     font-size: 25px;
     font-weight: 500;
+  }
+
+  &__room-name {
+    &::before {
+      content: '//';
+
+      margin: 0 0.25em;
+    }
   }
 
   &__chat {

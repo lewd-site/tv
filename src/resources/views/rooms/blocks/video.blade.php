@@ -9,7 +9,11 @@
         <img class="room-video__avatar-image" data-draggable="false" />
       </div>
 
-      <h3 class="room-video__subtitle">{{ $owner->name }} // {{ $room->name }}</h3>
+      <h3 class="room-video__subtitle">
+        <a class="room-video__owner-name" href="{{ route('users.show', ['id' => $room->owner->id]) }}">{{ $room->owner->name }}</a>
+
+        <span class="room-video__room-name">{{ $room->name }}</span>
+      </h3>
     </div>
   </div>
 

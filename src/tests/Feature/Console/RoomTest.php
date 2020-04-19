@@ -43,7 +43,7 @@ class RoomTest extends TestCase
       ->expectsQuestion('Name', 'Anime')
       ->expectsQuestion('URL', $url)
       ->expectsQuestion("Owner's e-mail", $user->email)
-      ->expectsOutput("Room $url already exists")
+      ->expectsOutput("Room /$url already exists")
       ->assertExitCode(1);
   }
 
@@ -64,7 +64,7 @@ class RoomTest extends TestCase
     $url = 'anime';
     $this->artisan('room:delete')
       ->expectsQuestion('URL', $url)
-      ->expectsOutput("Room $url not found")
+      ->expectsOutput("Room /$url not found")
       ->assertExitCode(1);
   }
 
