@@ -7,6 +7,7 @@ use App\Services\RoomService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RoomController extends Controller
 {
@@ -26,7 +27,7 @@ class RoomController extends Controller
 
   public function show($url)
   {
-    $room = Room::with('owner')->where(['url' => $url])->first();
+    $room = Room::with('owner', 'messages')->where(['url' => $url])->first();
     if (!isset($room)) {
       abort(404);
     }
@@ -57,5 +58,21 @@ class RoomController extends Controller
     }
 
     return redirect()->route('rooms.show', $room->url);
+  }
+
+  public function chatSubmit(Request $request, $url)
+  {
+    $input = $request->validate(['message' => 'required']);
+
+    $user = auth()->user();
+    $email = $user->email;
+
+    try {
+      $this->roomService->addChatMessage($url, $email, $input['message']);
+    } catch (NotFoundHttpException $e) {
+      return redirect()->back()->withErrors(['message' => $e->getMessage()]);
+    }
+
+    return redirect()->route('rooms.show', $url);
   }
 }

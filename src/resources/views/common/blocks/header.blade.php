@@ -13,7 +13,6 @@
 
   <div class="header__right">
     @if (Auth::check())
-    <a class="header__add" href="{{ route('rooms.create') }}" data-draggable="false"></a>
     <a class="header__name" href="{{ route('users.show', ['id' => Auth::id()]) }}" data-draggable="false">{{ Auth::user()->name }}</a>
 
     <div class="header__avatar">
@@ -24,6 +23,10 @@
       <ul class="header__list">
         <li class="header__item">
           <a href="{{ route('users.show', ['id' => Auth::id()]) }}" data-draggable="false">Профиль</a>
+        </li>
+
+        <li class="header__item">
+          <a href="{{ route('rooms.create') }}" data-draggable="false">Создать комнату</a>
         </li>
 
         <li class="header__item header__item_red">

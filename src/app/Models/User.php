@@ -4,12 +4,15 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property string $name
  * @property string $email
  * @property string $password
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  */
 class User extends Authenticatable
 {
@@ -38,5 +41,10 @@ class User extends Authenticatable
   public function rooms()
   {
     return $this->hasMany(Room::class, 'user_id', 'id');
+  }
+
+  public function messages()
+  {
+    return $this->hasMany(ChatMessage::class, 'user_id', 'id');
   }
 }

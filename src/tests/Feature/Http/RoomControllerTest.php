@@ -86,4 +86,58 @@ class RoomControllerTest extends TestCase
 
     $response->assertRedirect(route('auth.login'));
   }
+
+  public function test_addChatMessage(): void
+  {
+    $url = 'room';
+    /** @var Room */
+    $room = factory(Room::class)->create(['url' => $url]);
+
+    $email = 'test@example.com';
+    /** @var User */
+    $user = factory(User::class)->create(['email' => $email]);
+
+    $message = 'Test message';
+
+    $requestUrl = route('rooms.chatSubmit', ['url' => $url]);
+    $response = $this->actingAs($user)->post($requestUrl, ['message' => $message]);
+
+    $response->assertRedirect(route('rooms.show', ['url' => $url]));
+
+    $this->assertDatabaseHas('chat_messages', [
+      'message' => $message,
+      'user_id' => $user->id,
+      'room_id' => $room->id,
+    ]);
+  }
+
+  public function test_addChatMessage_roomNotFound(): void
+  {
+    $url = 'room';
+
+    $email = 'test@example.com';
+    /** @var User */
+    $user = factory(User::class)->create(['email' => $email]);
+
+    $message = 'Test message';
+
+    $requestUrl = route('rooms.chatSubmit', ['url' => $url]);
+    $response = $this->actingAs($user)->post($requestUrl, ['message' => $message]);
+
+    $response->assertRedirect();
+    $response->assertSessionHasErrors(['message']);
+  }
+
+  public function test_addChatMessage_asGuest(): void
+  {
+    $url = 'room';
+    factory(Room::class)->create(['url' => $url]);
+
+    $message = 'Test message';
+
+    $requestUrl = route('rooms.chatSubmit', ['url' => $url]);
+    $response = $this->post($requestUrl, ['message' => $message]);
+
+    $response->assertRedirect(route('auth.login'));
+  }
 }

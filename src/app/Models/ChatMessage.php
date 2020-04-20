@@ -7,32 +7,33 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property string $url
- * @property string $name
+ * @property string $message
  * @property int $user_id
+ * @property int $room_id
  * @property Carbon $created_at
- * @property Carbon $updated_at
  */
-class Room extends Model
+class ChatMessage extends Model
 {
+  const UPDATED_AT = null;
+
   /**
    * The attributes that are mass assignable.
    *
    * @var array
    */
   protected $fillable = [
-    'url',
-    'name',
+    'message',
     'user_id',
+    'room_id',
   ];
 
-  public function owner()
+  public function user()
   {
     return $this->belongsTo(User::class, 'user_id', 'id');
   }
 
-  public function messages()
+  public function room()
   {
-    return $this->hasMany(ChatMessage::class, 'room_id', 'id');
+    return $this->belongsTo(Room::class, 'room_id', 'id');
   }
 }

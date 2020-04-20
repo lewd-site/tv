@@ -18,5 +18,6 @@
   </div>
 
   <div class="room-video__chat chat">
+  @include('rooms.blocks.chat')
   </div>
 </div>

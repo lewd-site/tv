@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\ChatMessage;
 use App\Models\Room;
+use App\Models\User;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -76,5 +78,29 @@ class RoomService
     }
 
     $room->delete();
+  }
+
+  /**
+   * @throws NotFoundHttpException
+   */
+  public function addChatMessage(string $url, string $email, string $message): ChatMessage
+  {
+    /** @var ?Room */
+    $room = Room::where('url', $url)->first();
+    if (!isset($room)) {
+      throw new NotFoundHttpException("Room /$url not found");
+    }
+
+    /** @var ?User */
+    $user = User::where('email', $email)->first();
+    if (!isset($user)) {
+      throw new NotFoundHttpException("User $email not found");
+    }
+
+    return ChatMessage::create([
+      'message' => $message,
+      'user_id' => $user->id,
+      'room_id' => $room->id,
+    ]);
   }
 }

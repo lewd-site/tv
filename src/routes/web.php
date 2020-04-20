@@ -38,6 +38,8 @@ Route::name('rooms.')->group(function () {
   Route::get('/create', 'RoomController@create')->name('create')->middleware('auth');
   Route::post('/create', 'RoomController@createSubmit')->name('createSubmit')->middleware('auth');
 
+  Route::post('/{url}/chat', 'RoomController@chatSubmit')->name('chatSubmit')->middleware('auth');
+
   Route::get('/rooms', 'RoomController@list')->name('list');
   Route::get('/{url}', 'RoomController@show')->name('show');
 });
