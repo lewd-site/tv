@@ -21,7 +21,9 @@
   },
   "dependencies": {
     "axios": "^0.19",
+    "laravel-echo": "^1.7.0",
     "normalize.css": "^8.0.1",
+    "pusher-js": "^5.1.1",
     "vue": "^2.6.11"
   }
 }

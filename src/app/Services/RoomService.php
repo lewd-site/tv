@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\ChatMessageEvent;
 use App\Models\ChatMessage;
 use App\Models\Room;
 use App\Models\User;
@@ -23,6 +24,7 @@ class RoomService
         'about',
         'admin',
         'api',
+        'broadcasting',
         'contact',
         'create',
         'delete',
@@ -97,10 +99,14 @@ class RoomService
       throw new NotFoundHttpException("User $email not found");
     }
 
-    return ChatMessage::create([
+    $message = ChatMessage::create([
       'message' => $message,
       'user_id' => $user->id,
       'room_id' => $room->id,
     ]);
+
+    event(new ChatMessageEvent($message));
+
+    return $message;
   }
 }

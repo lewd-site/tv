@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property User $owner
  */
 class Room extends Model
 {
@@ -34,5 +35,13 @@ class Room extends Model
   public function messages()
   {
     return $this->hasMany(ChatMessage::class, 'room_id', 'id');
+  }
+
+  public function getViewModel(): array
+  {
+    return [
+      'id'   => $this->id,
+      'name' => $this->name,
+    ];
   }
 }

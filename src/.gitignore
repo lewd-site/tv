@@ -5,6 +5,7 @@
 /public/js
 /public/storage
 /public/mix-manifest.json
+/resources/ts/config.ts
 /storage/*.key
 /vendor
 .env

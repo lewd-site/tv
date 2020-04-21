@@ -2,7 +2,8 @@
 
 @push('scripts')
 <script>
-  window.messages = <?= json_encode($messages->map(fn ($message) => $message->getViewModel())) ?>;
+  window.room = <?= json_encode($room->getViewModel()); ?>;
+  window.messages = <?= json_encode($messages->map(fn ($message) => $message->getViewModel())); ?>;
 </script>
 
 <script src="/js/room.js"></script>
@@ -13,11 +14,11 @@
 @section('content')
 <main class="layout__main room-page">
   <section class="room-page__video room-video">
-  @include('rooms.blocks.video')
+    @include('rooms.blocks.video')
   </section>
 
   <section class="room-page__playlist room-playlist">
-  @include('rooms.blocks.playlist')
+    @include('rooms.blocks.playlist')
   </section>
 </main>
 @endsection
