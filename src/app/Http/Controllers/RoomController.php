@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChatMessage;
 use App\Models\Room;
 use App\Services\RoomService;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RoomController extends Controller
 {
+  const CHAT_MESSAGES = 100;
+
   protected RoomService $roomService;
 
   public function __construct(RoomService $roomService)
@@ -27,12 +30,23 @@ class RoomController extends Controller
 
   public function show($url)
   {
-    $room = Room::with('owner', 'messages')->where(['url' => $url])->first();
+    $room = Room::with('owner')->where('url', $url)->first();
     if (!isset($room)) {
       abort(404);
     }
 
-    return view('rooms.pages.show', ['room' => $room]);
+    $messages = ChatMessage::with('user')
+      ->where('room_id', $room->id)
+      ->orderBy('created_at', 'desc')
+      ->limit(static::CHAT_MESSAGES)
+      ->get()
+      ->reverse()
+      ->values();
+
+    return view('rooms.pages.show', [
+      'room'     => $room,
+      'messages' => $messages,
+    ]);
   }
 
   public function create()

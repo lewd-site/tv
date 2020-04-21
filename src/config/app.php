@@ -151,6 +151,7 @@ return [
     /*
      * Package Service Providers...
      */
+    hedronium\SpacelessBlade\SpacelessBladeProvider::class,
 
     /*
      * Application Service Providers...

@@ -1,5 +1,13 @@
 @extends('common.layout')
 
+@push('scripts')
+<script>
+  window.messages = <?= json_encode($messages->map(fn ($message) => $message->getViewModel())) ?>;
+</script>
+
+<script src="/js/room.js"></script>
+@endpush
+
 @section('title', 'LEWD.TV')
 
 @section('content')

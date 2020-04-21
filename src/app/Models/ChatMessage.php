@@ -36,4 +36,15 @@ class ChatMessage extends Model
   {
     return $this->belongsTo(Room::class, 'room_id', 'id');
   }
+
+  public function getViewModel(): array
+  {
+    return [
+      'id'         => $this->id,
+      'message'    => $this->message,
+      'userName'   => $this->user->name,
+      'userUrl'    => route('users.show', ['id' => $this->user->id]),
+      'userAvatar' => 'https://www.gravatar.com/avatar/' . md5(strtolower($this->user->email)) . '.jpg?s=24&d=mp',
+    ];
+  }
 }
