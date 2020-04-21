@@ -140,4 +140,63 @@ class RoomControllerTest extends TestCase
 
     $response->assertRedirect(route('auth.login'));
   }
+
+  public function test_addChatMessageJson(): void
+  {
+    $url = 'room';
+    /** @var Room */
+    $room = factory(Room::class)->create(['url' => $url]);
+
+    $email = 'test@example.com';
+    /** @var User */
+    $user = factory(User::class)->create(['email' => $email]);
+
+    $message = 'Test message';
+
+    $requestUrl = route('rooms.chatSubmitJson', ['url' => $url]);
+    $response = $this->actingAs($user, 'api')->postJson($requestUrl, ['message' => $message]);
+
+    $response->assertCreated();
+    $response->assertHeader('Location', route('rooms.show', ['url' => $url]));
+    $response->assertJson([
+      'message' => $message,
+      'userId'  => $user->id,
+      'roomId'  => $room->id,
+    ]);
+
+    $this->assertDatabaseHas('chat_messages', [
+      'message' => $message,
+      'user_id' => $user->id,
+      'room_id' => $room->id,
+    ]);
+  }
+
+  public function test_addChatMessageJson_roomNotFound(): void
+  {
+    $url = 'room';
+
+    $email = 'test@example.com';
+    /** @var User */
+    $user = factory(User::class)->create(['email' => $email]);
+
+    $message = 'Test message';
+
+    $requestUrl = route('rooms.chatSubmitJson', ['url' => $url]);
+    $response = $this->actingAs($user, 'api')->postJson($requestUrl, ['message' => $message]);
+
+    $response->assertNotFound();
+  }
+
+  public function test_addChatMessageJson_asGuest(): void
+  {
+    $url = 'room';
+    factory(Room::class)->create(['url' => $url]);
+
+    $message = 'Test message';
+
+    $requestUrl = route('rooms.chatSubmitJson', ['url' => $url]);
+    $response = $this->postJson($requestUrl, ['message' => $message]);
+
+    $response->assertUnauthorized();
+  }
 }

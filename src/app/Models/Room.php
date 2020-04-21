@@ -40,8 +40,10 @@ class Room extends Model
   public function getViewModel(): array
   {
     return [
-      'id'   => $this->id,
-      'name' => $this->name,
+      'id'     => $this->id,
+      'url'    => $this->url,
+      'name'   => $this->name,
+      'userId' => $this->user_id,
     ];
   }
 }

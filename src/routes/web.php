@@ -35,6 +35,8 @@ Route::name('users.')->group(function () {
 });
 
 Route::name('rooms.')->group(function () {
+  Route::post('/api/rooms/{url}/chat', 'RoomController@chatSubmitJson')->name('chatSubmitJson')->middleware('auth');
+
   Route::get('/create', 'RoomController@create')->name('create')->middleware('auth');
   Route::post('/create', 'RoomController@createSubmit')->name('createSubmit')->middleware('auth');
 

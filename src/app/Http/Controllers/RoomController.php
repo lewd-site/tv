@@ -89,4 +89,22 @@ class RoomController extends Controller
 
     return redirect()->route('rooms.show', $url);
   }
+
+  public function chatSubmitJson(Request $request, $url)
+  {
+    $input = $request->validate(['message' => 'required']);
+
+    $user = auth()->user();
+    $email = $user->email;
+
+    try {
+      $message = $this->roomService->addChatMessage($url, $email, $input['message']);
+    } catch (NotFoundHttpException $e) {
+      return response()->json(['error' => $e->getMessage()], 404);
+    }
+
+    return response()->json($message->getViewModel(), 201, [
+      'Location' => route('rooms.show', ['url' => $url]),
+    ]);
+  }
 }
