@@ -11,10 +11,18 @@ declare global {
   }
 }
 
+interface PresenceChannelUser {
+  readonly id: number;
+  readonly name: string;
+}
+
 const CHAT_MESSAGES = 100;
 
 class ChatModel {
-  public constructor(public readonly messages: Observable<ChatMessage[]>) {
+  public readonly users = new Observable<PresenceChannelUser[]>([]);
+  public readonly messages = new Observable<ChatMessage[]>([]);
+
+  public constructor() {
     if (!window.Echo) {
       console.warn('Echo is not defined');
       return;
@@ -34,15 +42,38 @@ class ChatModel {
 
         this.messages.set(messages);
       });
+
+    window.Echo.join(`rooms.${window.room.id}`)
+      .here((users: PresenceChannelUser[]) => this.users.set(users))
+      .joining((user: PresenceChannelUser) => {
+        const users = [...this.users.get(), user];
+        this.users.set(users);
+      })
+      .leaving((user: PresenceChannelUser) => {
+        const users = this.users.get().filter(u => u.id !== user.id);
+        this.users.set(users);
+      });
   }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const model = new ChatModel(new Observable(window.messages || []));
+  const model = new ChatModel();
+  model.messages.set(window.messages || []);
   window.chat = model;
 
   const viewModel = new Chat({ propsData: { messages: model.messages } });
   viewModel.$mount('.chat__main', true);
+
+  // Show count of online users.
+
+  const count = document.querySelector<HTMLElement>('.chat__count');
+  if (count) {
+    model.users.subscribe(users => {
+      count.textContent = `${users.length} online`;
+    });
+  } else {
+    console.warn('.chat__count not found');
+  }
 
   // Handle form submit.
 

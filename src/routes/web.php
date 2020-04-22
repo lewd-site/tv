@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Auth\GenericUser;
+use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -12,6 +15,19 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+Route::post('/broadcasting/auth', function (Request $request) {
+  if (!auth()->check()) {
+    $user = new GenericUser([
+      'id'   => -mt_rand(),
+      'name' => 'Anonymous'
+    ]);
+
+    $request->setUserResolver(fn () => $user);
+  }
+
+  return Broadcast::auth($request);
+});
 
 Route::name('common.')->group(function () {
   Route::get('/', 'CommonController@landing')->name('landing');

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -12,3 +13,10 @@ use Illuminate\Support\Facades\Broadcast;
 | used to check if an authenticated user can listen to the channel.
 |
 */
+
+Broadcast::channel('rooms.{id}', function ($user) {
+  return [
+    'id'   => $user->id,
+    'name' => $user->name,
+  ];
+});
