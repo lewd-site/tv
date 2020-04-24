@@ -3,6 +3,7 @@
 @push('scripts')
 <script>
   window.room = <?= json_encode($room->getViewModel()); ?>;
+  window.videos = <?= json_encode($videos->map(fn ($video) => $video->getViewModel())); ?>;
   window.messages = <?= json_encode($messages->map(fn ($message) => $message->getViewModel())); ?>;
 </script>
 

@@ -43,8 +43,22 @@ class User extends Authenticatable
     return $this->hasMany(Room::class, 'user_id', 'id');
   }
 
+  public function videos()
+  {
+    return $this->hasMany(Video::class, 'user_id', 'id');
+  }
+
   public function messages()
   {
     return $this->hasMany(ChatMessage::class, 'user_id', 'id');
+  }
+
+  public function getViewModel(): array
+  {
+    return [
+      'id'    => $this->id,
+      'name'  => $this->name,
+      'email' => $this->email,
+    ];
   }
 }

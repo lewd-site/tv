@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\ChatMessage;
 use App\Models\Room;
+use App\Models\Video;
 use App\Services\RoomService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RoomController extends Controller
 {
@@ -43,8 +43,13 @@ class RoomController extends Controller
       ->reverse()
       ->values();
 
+    $videos = Video::where('room_id', $room->id)
+      ->orderBy('start_at', 'asc')
+      ->get();
+
     return view('rooms.pages.show', [
       'room'     => $room,
+      'videos'   => $videos,
       'messages' => $messages,
     ]);
   }
@@ -56,15 +61,15 @@ class RoomController extends Controller
 
   public function createSubmit(Request $request)
   {
+    $user = auth()->user();
+
     $input = $request->validate([
       'url'  => 'required',
       'name' => 'required',
     ]);
 
-    $userId = auth()->id();
-
     try {
-      $room = $this->roomService->create($input['url'], $input['name'], $userId);
+      $room = $this->roomService->create($user, $input['url'], $input['name']);
     } catch (BadRequestHttpException $e) {
       return redirect()->back()->withErrors(['url' => $e->getMessage()]);
     } catch (ConflictHttpException $e) {
@@ -74,34 +79,54 @@ class RoomController extends Controller
     return redirect()->route('rooms.show', $room->url);
   }
 
-  public function chatSubmit(Request $request, $url)
+  public function videoSubmit(Request $request, $url)
   {
-    $input = $request->validate(['message' => 'required']);
+    /** @var ?Room */
+    $room = Room::where('url', $url)->first();
+    if (!isset($room)) {
+      return redirect()->back()->withErrors(['message' => 'Room /$url not found']);
+    }
 
     $user = auth()->user();
-    $email = $user->email;
+    $input = $request->validate(['url' => 'required']);
 
     try {
-      $this->roomService->addChatMessage($url, $email, $input['message']);
-    } catch (NotFoundHttpException $e) {
-      return redirect()->back()->withErrors(['message' => $e->getMessage()]);
+      $this->roomService->addVideo($room, $user, $input['url']);
+    } catch (BadRequestHttpException $e) {
+      return redirect()->back()->withErrors(['url' => $e->getMessage()]);
     }
+
+    return redirect()->route('rooms.show', $url);
+  }
+
+  public function chatSubmit(Request $request, $url)
+  {
+    /** @var ?Room */
+    $room = Room::where('url', $url)->first();
+    if (!isset($room)) {
+      return redirect()->back()->withErrors(['message' => 'Room /$url not found']);
+    }
+
+    $user = auth()->user();
+    $input = $request->validate(['message' => 'required']);
+
+    $this->roomService->addChatMessage($room, $user, $input['message']);
 
     return redirect()->route('rooms.show', $url);
   }
 
   public function chatSubmitJson(Request $request, $url)
   {
-    $input = $request->validate(['message' => 'required']);
+    /** @var ?Room */
+    $room = Room::where('url', $url)->first();
+    if (!isset($room)) {
+      return response()->json(['error' => 'Room /$url not found'], 404);
+    }
 
     $user = auth()->user();
-    $email = $user->email;
+    $input = $request->validate(['message' => 'required']);
 
-    try {
-      $message = $this->roomService->addChatMessage($url, $email, $input['message']);
-    } catch (NotFoundHttpException $e) {
-      return response()->json(['error' => $e->getMessage()], 404);
-    }
+    $message = $this->roomService->addChatMessage($room, $user, $input['message']);
 
     return response()->json($message->getViewModel(), 201, [
       'Location' => route('rooms.show', ['url' => $url]),

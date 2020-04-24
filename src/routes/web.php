@@ -20,7 +20,7 @@ Route::post('/broadcasting/auth', function (Request $request) {
   if (!auth()->check()) {
     $user = new GenericUser([
       'id'   => -mt_rand(),
-      'name' => 'Anonymous'
+      'name' => 'Anonymous',
     ]);
 
     $request->setUserResolver(fn () => $user);
@@ -51,12 +51,13 @@ Route::name('users.')->group(function () {
 });
 
 Route::name('rooms.')->group(function () {
-  Route::post('/api/rooms/{url}/chat', 'RoomController@chatSubmitJson')->name('chatSubmitJson')->middleware('auth');
+  Route::post('/api/rooms/{url}/messages', 'RoomController@chatSubmitJson')->name('chatSubmitJson')->middleware('auth');
 
   Route::get('/create', 'RoomController@create')->name('create')->middleware('auth');
   Route::post('/create', 'RoomController@createSubmit')->name('createSubmit')->middleware('auth');
 
-  Route::post('/{url}/chat', 'RoomController@chatSubmit')->name('chatSubmit')->middleware('auth');
+  Route::post('/{url}/videos', 'RoomController@videoSubmit')->name('videoSubmit')->middleware('auth');
+  Route::post('/{url}/messages', 'RoomController@chatSubmit')->name('chatSubmit')->middleware('auth');
 
   Route::get('/rooms', 'RoomController@list')->name('list');
   Route::get('/{url}', 'RoomController@show')->name('show');

@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Console\Command;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class DeleteUser extends Command
 {
@@ -44,13 +44,13 @@ class DeleteUser extends Command
   public function handle()
   {
     $email = $this->ask('E-Mail');
-
-    try {
-      $this->userService->delete($email);
-    } catch (NotFoundHttpException $e) {
-      $this->error($e->getMessage());
+    $user = User::where(['email' => $email])->first();
+    if (!isset($user)) {
+      $this->error("User $email not found");
 
       return 1;
     }
+
+    $this->userService->delete($user);
   }
 }

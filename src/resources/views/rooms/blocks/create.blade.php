@@ -15,20 +15,6 @@
     </div>
 
     <section class="create-room__playlist">
-      <h2 class="create-room__title">Плейлист</h2>
-
-      <div class="create-room__playlist-item">
-        <div class="create-room__playlist-link">
-          <input type="text" class="input" name="playlist[0]" placeholder="ссылка на видео" />
-          <span class="input-icon"></span>
-          <span class="input-label">ссылка на видео</span>
-        </div>
-
-        <button class="create-room__playlist-edit" type="button"></button>
-        <button class="create-room__playlist-handle" type="button"></button>
-      </div>
-
-      <button class="create-room__playlist-add" type="button"></button>
     </section>
 
     <div class="create-room__buttons">

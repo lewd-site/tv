@@ -2,13 +2,16 @@
 
 namespace App\Services;
 
-use App\Events\ChatMessageEvent;
+use App\Events\ChatMessageCreatedEvent;
+use App\Events\VideoCreatedEvent;
 use App\Models\ChatMessage;
 use App\Models\Room;
 use App\Models\User;
+use App\Models\Video;
+use DateInterval;
+use Illuminate\Support\Carbon;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RoomService
 {
@@ -16,8 +19,14 @@ class RoomService
    * @throws BadRequestHttpException
    * @throws ConflictHttpException
    */
-  public function create(string $url, string $name, int $userId): Room
+  public function create(User $user, string $url, string $name): Room
   {
+    /** @var ?Room */
+    $room = Room::where('url', $url)->first();
+    if (isset($room)) {
+      throw new ConflictHttpException("Room /$url already exists");
+    }
+
     static $reserved = [];
     if (empty($reserved)) {
       $reserved = [
@@ -51,61 +60,84 @@ class RoomService
       throw new BadRequestHttpException('Name required');
     }
 
-    if ($userId <= 0) {
-      throw new BadRequestHttpException('Owner ID required');
-    }
-
-    /** @var ?Room */
-    $room = Room::where('url', $url)->first();
-    if (isset($room)) {
-      throw new ConflictHttpException("Room /$url already exists");
-    }
-
     return Room::create([
       'url'     => $url,
       'name'    => $name,
-      'user_id' => $userId,
+      'user_id' => $user->id,
     ]);
   }
 
-  /**
-   * @throws NotFoundHttpException
-   */
-  public function delete(string $url): void
+  public function delete(Room $room): void
   {
-    /** @var ?Room */
-    $room = Room::where('url', $url)->first();
-    if (!isset($room)) {
-      throw new NotFoundHttpException("Room /$url not found");
-    }
-
     $room->delete();
   }
 
   /**
-   * @throws NotFoundHttpException
+   * @throws BadRequestHttpException
    */
-  public function addChatMessage(string $url, string $email, string $message): ChatMessage
+  public function addVideo(Room $room, User $user, string $url): Video
   {
-    /** @var ?Room */
-    $room = Room::where('url', $url)->first();
-    if (!isset($room)) {
-      throw new NotFoundHttpException("Room /$url not found");
+    $matches = [];
+    if (!preg_match('/^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([A-Za-z0-9_-]+).*$/', $url, $matches)) {
+      throw new BadRequestHttpException("$url is not a valid YouTube URL");
     }
 
-    /** @var ?User */
-    $user = User::where('email', $email)->first();
-    if (!isset($user)) {
-      throw new NotFoundHttpException("User $email not found");
+    $videoId = $matches[1];
+    $key = config('services.youtube.key');
+    $serviceUrl = "https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=$videoId&key=$key";
+
+    $response = file_get_contents($serviceUrl);
+    if ($response === false) {
+      throw new BadRequestHttpException("Can't get video info");
     }
 
+    $data = json_decode($response, true);
+    if (empty($data['items'])) {
+      throw new BadRequestHttpException("Video $url not found");
+    }
+
+    $url = "https://www.youtube.com/watch?v=$videoId";
+
+    $item = $data['items'][0];
+    $title = $item['snippet']['title'];
+
+    $durationInterval = new DateInterval($item['contentDetails']['duration']);
+    $duration = $durationInterval->s + 60 * $durationInterval->i + 3600 * $durationInterval->h + 86400 * $durationInterval->d;
+
+    /** @var ?string */
+    $playlistEndAt = Video::where('room_id', $room->id)
+      ->whereRaw('end_at > now()')
+      ->select('end_at')
+      ->pluck('end_at')
+      ->first();
+
+    $startAt = new Carbon($playlistEndAt);
+    $endAt = $startAt->clone()->addSeconds($duration);
+
+    $video = Video::create([
+      'url'      => $url,
+      'type'     => 'youtube',
+      'title'    => $title,
+      'start_at' => $startAt,
+      'end_at'   => $endAt,
+      'room_id'  => $room->id,
+      'user_id'  => $user->id,
+    ]);
+
+    event(new VideoCreatedEvent($video));
+
+    return $video;
+  }
+
+  public function addChatMessage(Room $room, User $user, string $message): ChatMessage
+  {
     $message = ChatMessage::create([
       'message' => $message,
       'user_id' => $user->id,
       'room_id' => $room->id,
     ]);
 
-    event(new ChatMessageEvent($message));
+    event(new ChatMessageCreatedEvent($message));
 
     return $message;
   }

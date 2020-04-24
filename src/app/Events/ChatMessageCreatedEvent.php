@@ -9,7 +9,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class ChatMessageEvent implements ShouldBroadcastNow
+class ChatMessageCreatedEvent implements ShouldBroadcastNow
 {
   use Dispatchable, InteractsWithSockets, SerializesModels;
 

@@ -2,9 +2,11 @@ import Axios from 'axios';
 import Echo from 'laravel-echo';
 import * as Pusher from 'pusher-js';
 import config from './config';
+import { User } from './types';
 
 declare global {
   interface Window {
+    readonly user?: User;
     Echo?: Echo;
     Pusher?: typeof Pusher;
   }

@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Room;
 use App\Services\RoomService;
 use Illuminate\Console\Command;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class DeleteRoom extends Command
 {
@@ -44,13 +44,13 @@ class DeleteRoom extends Command
   public function handle()
   {
     $url = $this->ask('URL');
-
-    try {
-      $this->roomService->delete($url);
-    } catch (NotFoundHttpException $e) {
-      $this->error($e->getMessage());
+    $room = Room::where(['url' => $url])->first();
+    if (!isset($room)) {
+      $this->error("Room /$url not found");
 
       return 1;
     }
+
+    $this->roomService->delete($room);
   }
 }

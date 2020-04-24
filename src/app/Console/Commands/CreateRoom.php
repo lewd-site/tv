@@ -57,7 +57,7 @@ class CreateRoom extends Command
     }
 
     try {
-      $this->roomService->create($url, $name, $user->id);
+      $this->roomService->create($user, $url, $name);
     } catch (BadRequestHttpException | ConflictHttpException $e) {
       $this->error($e->getMessage());
 

@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Services\RoomService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
 
 class RoomServiceTest extends TestCase
@@ -24,7 +23,7 @@ class RoomServiceTest extends TestCase
 
     /** @var RoomService */
     $service = app()->make(RoomService::class);
-    $service->create($url, $name, $user->id);
+    $service->create($user, $url, $name);
 
     $this->assertDatabaseHas('rooms', [
       'url'     => $url,
@@ -45,28 +44,19 @@ class RoomServiceTest extends TestCase
 
     /** @var RoomService */
     $service = app()->make(RoomService::class);
-    $service->create($url, 'Room', $user->id);
+    $service->create($user, $url, 'Room');
   }
 
   public function test_delete(): void
   {
     $url = 'room';
-    factory(Room::class)->create(['url' => $url]);
+    $room = factory(Room::class)->create(['url' => $url]);
 
     /** @var RoomService */
     $service = app()->make(RoomService::class);
-    $service->delete($url);
+    $service->delete($room);
 
     $this->assertDatabaseMissing('rooms', ['url' => $url]);
-  }
-
-  public function test_delete_notFound(): void
-  {
-    $this->expectException(NotFoundHttpException::class);
-
-    /** @var RoomService */
-    $service = app()->make(RoomService::class);
-    $service->delete('room');
   }
 
   public function test_addChatMessage(): void
@@ -83,36 +73,12 @@ class RoomServiceTest extends TestCase
 
     /** @var RoomService */
     $service = app()->make(RoomService::class);
-    $service->addChatMessage($url, $email, $message);
+    $service->addChatMessage($room, $user, $message);
 
     $this->assertDatabaseHas('chat_messages', [
       'message' => $message,
       'user_id' => $user->id,
       'room_id' => $room->id,
     ]);
-  }
-
-  public function test_addChatMessage_roomNotFound(): void
-  {
-    $email = 'test@example.com';
-    factory(User::class)->create(['email' => $email]);
-
-    $this->expectException(NotFoundHttpException::class);
-
-    /** @var RoomService */
-    $service = app()->make(RoomService::class);
-    $service->addChatMessage('room', $email, 'Test mesage');
-  }
-
-  public function test_addChatMessage_userNotFound(): void
-  {
-    $url = 'room';
-    factory(Room::class)->create(['url' => $url]);
-
-    $this->expectException(NotFoundHttpException::class);
-
-    /** @var RoomService */
-    $service = app()->make(RoomService::class);
-    $service->addChatMessage($url, 'test@example.com', 'Test mesage');
   }
 }

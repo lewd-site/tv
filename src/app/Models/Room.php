@@ -32,6 +32,11 @@ class Room extends Model
     return $this->belongsTo(User::class, 'user_id', 'id');
   }
 
+  public function videos()
+  {
+    return $this->hasMany(Video::class, 'room_id', 'id');
+  }
+
   public function messages()
   {
     return $this->hasMany(ChatMessage::class, 'room_id', 'id');

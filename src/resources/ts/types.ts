@@ -18,3 +18,20 @@ export interface Room {
 
   readonly userId: number;
 }
+
+export interface Video {
+  readonly id: number;
+  readonly url: string;
+  readonly type: string;
+  readonly title: string;
+  readonly startAt: string;
+  readonly endAt: string;
+  readonly userId: number;
+  readonly roomId: number;
+}
+
+export interface User {
+  readonly id: number;
+  readonly name: string;
+  readonly email: string;
+}

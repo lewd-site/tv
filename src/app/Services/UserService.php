@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class UserService
 {
@@ -27,17 +26,8 @@ class UserService
     ]);
   }
 
-  /**
-   * @throws NotFoundHttpException
-   */
-  public function delete(string $email): void
+  public function delete(User $user): void
   {
-    /** @var ?User */
-    $user = User::where('email', $email)->first();
-    if (!isset($user)) {
-      throw new NotFoundHttpException("User $email not found");
-    }
-
     $user->delete();
   }
 }

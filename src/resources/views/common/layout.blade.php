@@ -4,6 +4,12 @@
 @endprepend
 
 @prepend('scripts')
+@if (auth()->check())
+<script>
+  window.user = <?= json_encode(auth()->user()->getViewModel()); ?>;
+</script>
+@endif
+
 <script src="/js/manifest.js"></script>
 <script src="/js/vendor.js"></script>
 <script src="/js/app.js"></script>
@@ -36,6 +42,10 @@
     @include('common.blocks.footer')
   </footer>
   @show
+
+  <div class="layout__modals">
+    @stack('modals')
+  </div>
 
   @stack('scripts')
 </body>

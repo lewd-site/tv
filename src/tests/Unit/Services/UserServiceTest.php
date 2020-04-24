@@ -43,21 +43,12 @@ class UserServiceTest extends TestCase
   public function test_delete(): void
   {
     $email = 'user@example.com';
-    factory(User::class)->create(['email' => $email]);
+    $user = factory(User::class)->create(['email' => $email]);
 
     /** @var UserService */
     $service = app()->make(UserService::class);
-    $service->delete($email);
+    $service->delete($user);
 
     $this->assertDatabaseMissing('users', ['email' => $email]);
-  }
-
-  public function test_delete_notFound(): void
-  {
-    $this->expectException(NotFoundHttpException::class);
-
-    /** @var UserService */
-    $service = app()->make(UserService::class);
-    $service->delete('user@example.com');
   }
 }
