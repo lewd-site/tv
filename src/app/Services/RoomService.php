@@ -106,8 +106,8 @@ class RoomService
 
     /** @var ?string */
     $playlistEndAt = Video::where('room_id', $room->id)
-      ->whereRaw('end_at > now()')
-      ->select('end_at')
+      ->where('end_at', '>', now())
+      ->selectRaw('max(end_at) as end_at')
       ->pluck('end_at')
       ->first();
 

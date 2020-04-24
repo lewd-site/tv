@@ -41,6 +41,9 @@ class RoomModel {
       .listen('VideoCreatedEvent', (video: Video) => {
         this.videos.set([...this.videos.get(), video]);
       })
+      .listen('VideoDeletedEvent', ({ id }: { id: number }) => {
+        this.videos.set(this.videos.get().filter(v => v.id !== id));
+      })
       .listen('ChatMessageCreatedEvent', (message: ChatMessage) => {
         const messages = [...this.messages.get(), message];
         if (messages.length > CHAT_MESSAGES) {

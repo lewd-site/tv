@@ -25,6 +25,7 @@ class Kernel extends ConsoleKernel
   protected function schedule(Schedule $schedule)
   {
     $schedule->command('queue:work --stop-when-empty')->cron('* * * * *')->withoutOverlapping();
+    $schedule->command('video:delete-ended')->cron('* * * * *')->withoutOverlapping();
   }
 
   /**
