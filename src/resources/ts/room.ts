@@ -1,5 +1,6 @@
 import Axios from 'axios';
 import Chat from './components/Chat.vue';
+import Playlist from './components/Playlist.vue';
 import Observable from './observable';
 import { Room, ChatMessage, Video } from './types';
 
@@ -37,6 +38,9 @@ class RoomModel {
     }
 
     window.Echo.channel(`rooms.${window.room.id}`)
+      .listen('VideoCreatedEvent', (video: Video) => {
+        this.videos.set([...this.videos.get(), video]);
+      })
       .listen('ChatMessageCreatedEvent', (message: ChatMessage) => {
         const messages = [...this.messages.get(), message];
         if (messages.length > CHAT_MESSAGES) {
@@ -65,6 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
   model.messages.set(window.messages || []);
 
   window.model = model;
+
+  const playlistViewModel = new Playlist({ propsData: { videos: model.videos } });
+  playlistViewModel.$mount('.room-playlist__list', true);
 
   const chatViewModel = new Chat({ propsData: { messages: model.messages } });
   chatViewModel.$mount('.chat__main', true);

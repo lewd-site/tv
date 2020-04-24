@@ -1,6 +1,7 @@
 <div class="room-playlist__inner">
   <h2 class="room-playlist__title">Плейлист</h2>
 
+  @spaceless
   <ul class="room-playlist__list">
     @foreach ($videos as $video)
     <li class="room-playlist__item">
@@ -8,6 +9,7 @@
     </li>
     @endforeach
   </ul>
+  @endspaceless
 
   @if (auth()->check() && auth()->id() === $room->user_id)
   <button class="room-playlist__add" type="button"></button>
