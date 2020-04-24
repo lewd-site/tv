@@ -19,7 +19,7 @@
 @push('modals')
 <div class="add-video-modal" hidden>
   <div class="add-video-modal__inner">
-    <form method="POST" action="{{ route('rooms.videoSubmit', ['url' => $room->url]) }}" enctype="multipart/form-data">
+    <form class="add-video-modal__form" method="POST" action="{{ route('rooms.videoSubmit', ['url' => $room->url]) }}" enctype="multipart/form-data">
       @csrf
 
       <input type="text" class="add-video-modal__url input" name="url" placeholder="Ссылка на видео" required />

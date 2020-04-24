@@ -99,6 +99,28 @@ class RoomController extends Controller
     return redirect()->route('rooms.show', $url);
   }
 
+  public function videoSubmitJson(Request $request, $url)
+  {
+    /** @var ?Room */
+    $room = Room::where('url', $url)->first();
+    if (!isset($room)) {
+      return response()->json(['error' => 'Room /$url not found'], 404);
+    }
+
+    $user = auth()->user();
+    $input = $request->validate(['url' => 'required']);
+
+    try {
+      $video = $this->roomService->addVideo($room, $user, $input['url']);
+    } catch (BadRequestHttpException $e) {
+      return response()->json(['error' => $e->getMessage()], 400);
+    }
+
+    return response()->json($video->getViewModel(), 201, [
+      'Location' => route('rooms.show', ['url' => $url]),
+    ]);
+  }
+
   public function chatSubmit(Request $request, $url)
   {
     /** @var ?Room */

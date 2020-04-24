@@ -51,6 +51,7 @@ Route::name('users.')->group(function () {
 });
 
 Route::name('rooms.')->group(function () {
+  Route::post('/api/rooms/{url}/videos', 'RoomController@videoSubmitJson')->name('videoSubmitJson')->middleware('auth');
   Route::post('/api/rooms/{url}/messages', 'RoomController@chatSubmitJson')->name('chatSubmitJson')->middleware('auth');
 
   Route::get('/create', 'RoomController@create')->name('create')->middleware('auth');
