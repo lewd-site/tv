@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Services\UserService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
@@ -27,13 +28,9 @@ class AuthController extends Controller
   /**
    * Handles login form submit.
    */
-  public function loginSubmit(Request $request)
+  public function loginSubmit(LoginRequest $request)
   {
-    $credentials = $request->validate([
-      'email'    => 'required|email',
-      'password' => 'required|min:8',
-    ]);
-
+    $credentials = $request->validated();
     if (!Auth::attempt($credentials)) {
       return redirect()->back()->withErrors([
         'email' => 'User not found or password is incorrect',
@@ -54,14 +51,9 @@ class AuthController extends Controller
   /**
    * Handles register form submit.
    */
-  public function registerSubmit(Request $request)
+  public function registerSubmit(RegisterRequest $request)
   {
-    $credentials = $request->validate([
-      'name'     => 'required',
-      'email'    => 'required|email',
-      'password' => 'required|min:8',
-    ]);
-
+    $credentials = $request->validated();
     try {
       $user = $this->userService->create(
         $credentials['name'],

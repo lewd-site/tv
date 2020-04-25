@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateMessageRequest;
+use App\Http\Requests\CreateRoomRequest;
+use App\Http\Requests\CreateVideoRequest;
 use App\Models\ChatMessage;
 use App\Models\Room;
 use App\Models\Video;
 use App\Services\RoomService;
 use App\Services\VideoService;
-use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
@@ -57,15 +59,10 @@ class RoomController extends Controller
     return view('rooms.pages.create');
   }
 
-  public function createSubmit(Request $request)
+  public function createSubmit(CreateRoomRequest $request)
   {
     $user = auth()->user();
-
-    $input = $request->validate([
-      'url'  => 'required',
-      'name' => 'required',
-    ]);
-
+    $input = $request->validated();
     try {
       $room = $this->roomService->create($user, $input['url'], $input['name']);
     } catch (BadRequestHttpException $e) {
@@ -77,11 +74,10 @@ class RoomController extends Controller
     return redirect()->route('rooms.show', ['room' => $room->url]);
   }
 
-  public function videoSubmit(Request $request, Room $room)
+  public function videoSubmit(CreateVideoRequest $request, Room $room)
   {
     $user = auth()->user();
-    $input = $request->validate(['url' => 'required']);
-
+    $input = $request->validated();
     try {
       $this->videoService->create($room, $user, $input['url']);
     } catch (BadRequestHttpException $e) {
@@ -91,11 +87,10 @@ class RoomController extends Controller
     return redirect()->route('rooms.show', ['room' => $room->url]);
   }
 
-  public function videoSubmitJson(Request $request, Room $room)
+  public function videoSubmitJson(CreateVideoRequest $request, Room $room)
   {
     $user = auth()->user();
-    $input = $request->validate(['url' => 'required']);
-
+    $input = $request->validated();
     try {
       $video = $this->videoService->create($room, $user, $input['url']);
     } catch (BadRequestHttpException $e) {
@@ -107,21 +102,19 @@ class RoomController extends Controller
     ]);
   }
 
-  public function chatSubmit(Request $request, Room $room)
+  public function chatSubmit(CreateMessageRequest $request, Room $room)
   {
     $user = auth()->user();
-    $input = $request->validate(['message' => 'required']);
-
+    $input = $request->validated();
     $this->roomService->addChatMessage($room, $user, $input['message']);
 
     return redirect()->route('rooms.show', ['room' => $room->url]);
   }
 
-  public function chatSubmitJson(Request $request, Room $room)
+  public function chatSubmitJson(CreateMessageRequest $request, Room $room)
   {
     $user = auth()->user();
-    $input = $request->validate(['message' => 'required']);
-
+    $input = $request->validated();
     $message = $this->roomService->addChatMessage($room, $user, $input['message']);
 
     return response()->json($message->getViewModel(), 201, [

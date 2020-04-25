@@ -157,7 +157,7 @@ class AuthControllerTest extends TestCase
     ]);
 
     $response->assertRedirect();
-    $response->assertSessionHasErrors(['name']);
+    $response->assertSessionHasErrors(['email']);
     $this->assertGuest();
   }
 
