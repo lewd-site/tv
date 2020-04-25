@@ -6,6 +6,14 @@ use Tests\TestCase;
 
 class CommonControllerTest extends TestCase
 {
+  public function test_time(): void
+  {
+    $response = $this->getJson(route('common.time'));
+
+    $response->assertSuccessful();
+    $response->assertJsonStructure(['time']);
+  }
+
   public function test_landing(): void
   {
     $response = $this->get(route('common.landing'));

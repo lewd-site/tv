@@ -19,6 +19,10 @@ declare global {
   }
 }
 
+interface TimeResponse {
+  readonly time: string;
+}
+
 interface PresenceChannelUser {
   readonly id: number;
   readonly name: string;
@@ -45,12 +49,31 @@ const CHAT_MESSAGES = 100;
 
 const youTubeRegExp = /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([A-Za-z0-9_-]+).*$/;
 
-const syncVideo = () => {
+let serverTimeOffset: null | number = null;
+const now = async () => {
+  if (serverTimeOffset !== null) {
+    return new Date().getTime() + serverTimeOffset;
+  } else {
+    try {
+      const timeBefore = new Date().getTime();
+      const serverTime = new Date((await apiClient.get<TimeResponse>('/api/time')).data.time).getTime();
+      const timeAfter = new Date().getTime();
+      const localTime = (timeBefore + timeAfter) / 2;
+      serverTimeOffset = serverTime - localTime;
+
+      return new Date().getTime() + serverTimeOffset;
+    } catch {
+      return new Date().getTime();
+    }
+  }
+};
+
+const syncVideo = async () => {
   if (!window.model || !window.player) {
     return;
   }
 
-  const video = window.model.getCurrentVideo();
+  const video = await window.model.getCurrentVideo();
   if (!video) {
     return;
   }
@@ -76,18 +99,19 @@ const syncVideo = () => {
   }
 };
 
-const syncVideoTime = () => {
+const syncVideoTime = async () => {
   if (!window.model || !window.player) {
     return;
   }
 
-  const video = window.model.getCurrentVideo();
+  const video = await window.model.getCurrentVideo();
   if (!video) {
     return;
   }
 
+  const timeNow = await now();
   const playerTime = window.player.getCurrentTime();
-  const time = (new Date().getTime() - new Date(video.startAt).getTime()) / 1000;
+  const time = (timeNow - new Date(video.startAt).getTime()) / 1000;
   if (Math.abs(playerTime - time) > 1.0) {
     window.player.seekTo(time, true);
   }
@@ -144,14 +168,15 @@ class RoomModel {
       });
   }
 
-  public getCurrentVideo(): null | Video {
+  public async getCurrentVideo(): Promise<null | Video> {
+    const timeNow = await now();
+
     const videos = this.videos.get();
     const video = videos.find(video => {
       const startAt = new Date(video.startAt).getTime();
       const endAt = new Date(video.endAt).getTime();
-      const now = new Date().getTime();
 
-      return startAt <= now && now < endAt;
+      return startAt <= timeNow && timeNow < endAt;
     }) || null;
 
     this.currentVideo.set(video);

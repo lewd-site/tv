@@ -30,6 +30,8 @@ Route::post('/broadcasting/auth', function (Request $request) {
 });
 
 Route::name('common.')->group(function () {
+  Route::get('/api/time', 'CommonController@time')->name('time');
+
   Route::get('/', 'CommonController@landing')->name('landing');
   Route::get('/about', 'CommonController@about')->name('about');
   Route::get('/contact', 'CommonController@contact')->name('contact');
