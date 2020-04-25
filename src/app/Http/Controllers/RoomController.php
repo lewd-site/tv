@@ -6,6 +6,7 @@ use App\Models\ChatMessage;
 use App\Models\Room;
 use App\Models\Video;
 use App\Services\RoomService;
+use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
@@ -15,10 +16,12 @@ class RoomController extends Controller
   const CHAT_MESSAGES = 100;
 
   protected RoomService $roomService;
+  protected VideoService $videoService;
 
-  public function __construct(RoomService $roomService)
+  public function __construct(RoomService $roomService, VideoService $videoService)
   {
     $this->roomService = $roomService;
+    $this->videoService = $videoService;
   }
 
   public function list()
@@ -91,7 +94,7 @@ class RoomController extends Controller
     $input = $request->validate(['url' => 'required']);
 
     try {
-      $this->roomService->addVideo($room, $user, $input['url']);
+      $this->videoService->create($room, $user, $input['url']);
     } catch (BadRequestHttpException $e) {
       return redirect()->back()->withErrors(['url' => $e->getMessage()]);
     }
@@ -111,7 +114,7 @@ class RoomController extends Controller
     $input = $request->validate(['url' => 'required']);
 
     try {
-      $video = $this->roomService->addVideo($room, $user, $input['url']);
+      $video = $this->videoService->create($room, $user, $input['url']);
     } catch (BadRequestHttpException $e) {
       return response()->json(['error' => $e->getMessage()], 400);
     }
