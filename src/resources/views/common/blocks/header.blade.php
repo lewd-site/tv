@@ -13,7 +13,7 @@
 
   <div class="header__right">
     @if (Auth::check())
-    <a class="header__name" href="{{ route('users.show', ['id' => Auth::id()]) }}" data-draggable="false">{{ Auth::user()->name }}</a>
+    <a class="header__name" href="{{ route('users.show', ['user' => Auth::id()]) }}" data-draggable="false">{{ Auth::user()->name }}</a>
 
     <div class="header__avatar">
       <img class="header__avatar-image" src="https://www.gravatar.com/avatar/{{ md5(strtolower(Auth::user()->email)) }}.jpg?s=32&d=mp" data-draggable="false" />
@@ -22,7 +22,7 @@
     <div class="header__menu">
       <ul class="header__list">
         <li class="header__item">
-          <a href="{{ route('users.show', ['id' => Auth::id()]) }}" data-draggable="false">Профиль</a>
+          <a href="{{ route('users.show', ['user' => Auth::id()]) }}" data-draggable="false">Профиль</a>
         </li>
 
         <li class="header__item">

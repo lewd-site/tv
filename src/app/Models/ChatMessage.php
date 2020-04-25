@@ -46,7 +46,7 @@ class ChatMessage extends Model
       'message'    => $this->message,
       'userId'     => $this->user_id,
       'userName'   => $this->user->name,
-      'userUrl'    => route('users.show', ['id' => $this->user->id]),
+      'userUrl'    => route('users.show', ['user' => $this->user->id]),
       'userAvatar' => 'https://www.gravatar.com/avatar/' . md5(strtolower($this->user->email)) . '.jpg?s=24&d=mp',
       'roomId'     => $this->room_id,
       'roomName'   => $this->room->name,

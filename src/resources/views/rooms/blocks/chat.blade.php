@@ -18,7 +18,7 @@
         @endspaceless
         @spaceless
         <div class="chat__message">
-          <a class="chat__name" href="{{ route('users.show', ['id' => $message->user_id]) }}">{{ $message->user->name }}</a>
+          <a class="chat__name" href="{{ route('users.show', ['user' => $message->user_id]) }}">{{ $message->user->name }}</a>
           @endspaceless
           @spaceless
           <span class="chat__message-text">{{ $message->message }}</span>
@@ -30,7 +30,7 @@
   @endspaceless
 
   <div class="chat__footer">
-    <form class="chat__form" method="POST" action="{{ route('rooms.chatSubmit', ['url' => $room->url]) }}" enctype="multipart/form-data">
+    <form class="chat__form" method="POST" action="{{ route('rooms.chatSubmit', ['room' => $room->url]) }}" enctype="multipart/form-data">
       @csrf
 
       <input type="text" class="input chat__input" name="message" required autocomplete="off" />

@@ -31,13 +31,8 @@ class RoomController extends Controller
     return view('rooms.pages.list', ['rooms' => $rooms]);
   }
 
-  public function show($url)
+  public function show(Room $room)
   {
-    $room = Room::with('owner')->where('url', $url)->first();
-    if (!isset($room)) {
-      abort(404);
-    }
-
     $messages = ChatMessage::with('user')
       ->where('room_id', $room->id)
       ->orderBy('created_at', 'desc')
@@ -79,17 +74,11 @@ class RoomController extends Controller
       return redirect()->back()->withErrors(['url' => $e->getMessage()]);
     }
 
-    return redirect()->route('rooms.show', $room->url);
+    return redirect()->route('rooms.show', ['room' => $room->url]);
   }
 
-  public function videoSubmit(Request $request, $url)
+  public function videoSubmit(Request $request, Room $room)
   {
-    /** @var ?Room */
-    $room = Room::where('url', $url)->first();
-    if (!isset($room)) {
-      return redirect()->back()->withErrors(['message' => 'Room /$url not found']);
-    }
-
     $user = auth()->user();
     $input = $request->validate(['url' => 'required']);
 
@@ -99,17 +88,11 @@ class RoomController extends Controller
       return redirect()->back()->withErrors(['url' => $e->getMessage()]);
     }
 
-    return redirect()->route('rooms.show', $url);
+    return redirect()->route('rooms.show', ['room' => $room->url]);
   }
 
-  public function videoSubmitJson(Request $request, $url)
+  public function videoSubmitJson(Request $request, Room $room)
   {
-    /** @var ?Room */
-    $room = Room::where('url', $url)->first();
-    if (!isset($room)) {
-      return response()->json(['error' => 'Room /$url not found'], 404);
-    }
-
     $user = auth()->user();
     $input = $request->validate(['url' => 'required']);
 
@@ -120,41 +103,29 @@ class RoomController extends Controller
     }
 
     return response()->json($video->getViewModel(), 201, [
-      'Location' => route('rooms.show', ['url' => $url]),
+      'Location' => route('rooms.show', ['room' => $room->url]),
     ]);
   }
 
-  public function chatSubmit(Request $request, $url)
+  public function chatSubmit(Request $request, Room $room)
   {
-    /** @var ?Room */
-    $room = Room::where('url', $url)->first();
-    if (!isset($room)) {
-      return redirect()->back()->withErrors(['message' => 'Room /$url not found']);
-    }
-
     $user = auth()->user();
     $input = $request->validate(['message' => 'required']);
 
     $this->roomService->addChatMessage($room, $user, $input['message']);
 
-    return redirect()->route('rooms.show', $url);
+    return redirect()->route('rooms.show', ['room' => $room->url]);
   }
 
-  public function chatSubmitJson(Request $request, $url)
+  public function chatSubmitJson(Request $request, Room $room)
   {
-    /** @var ?Room */
-    $room = Room::where('url', $url)->first();
-    if (!isset($room)) {
-      return response()->json(['error' => 'Room /$url not found'], 404);
-    }
-
     $user = auth()->user();
     $input = $request->validate(['message' => 'required']);
 
     $message = $this->roomService->addChatMessage($room, $user, $input['message']);
 
     return response()->json($message->getViewModel(), 201, [
-      'Location' => route('rooms.show', ['url' => $url]),
+      'Location' => route('rooms.show', ['room' => $room->url]),
     ]);
   }
 }

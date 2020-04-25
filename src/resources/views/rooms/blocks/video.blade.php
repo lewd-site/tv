@@ -15,7 +15,7 @@
       </div>
 
       <h3 class="room-video__subtitle">
-        <a class="room-video__owner-name" href="{{ route('users.show', ['id' => $room->owner->id]) }}">{{ $room->owner->name }}</a>
+        <a class="room-video__owner-name" href="{{ route('users.show', ['user' => $room->owner->id]) }}">{{ $room->owner->name }}</a>
 
         <span class="room-video__room-name">{{ $room->name }}</span>
       </h3>

@@ -24,7 +24,7 @@ class RoomControllerTest extends TestCase
     $url = 'anime';
     factory(Room::class)->create(['url' => $url]);
 
-    $response = $this->get(route('rooms.show', ['url' => $url]));
+    $response = $this->get(route('rooms.show', ['room' => $url]));
 
     $response->assertSuccessful();
     $response->assertViewIs('rooms.pages.show');
@@ -32,7 +32,7 @@ class RoomControllerTest extends TestCase
 
   public function test_show_notFound(): void
   {
-    $response = $this->get(route('rooms.show', ['url' => 'anime']));
+    $response = $this->get(route('rooms.show', ['room' => 'anime']));
 
     $response->assertNotFound();
   }
@@ -65,7 +65,7 @@ class RoomControllerTest extends TestCase
       'name' => $name,
     ]);
 
-    $response->assertRedirect(route('rooms.show', ['url' => $url]));
+    $response->assertRedirect(route('rooms.show', ['room' => $url]));
 
     $this->assertDatabaseHas('rooms', [
       'url'     => $url,
@@ -99,10 +99,10 @@ class RoomControllerTest extends TestCase
 
     $message = 'Test message';
 
-    $requestUrl = route('rooms.chatSubmit', ['url' => $url]);
+    $requestUrl = route('rooms.chatSubmit', ['room' => $url]);
     $response = $this->actingAs($user)->post($requestUrl, ['message' => $message]);
 
-    $response->assertRedirect(route('rooms.show', ['url' => $url]));
+    $response->assertRedirect(route('rooms.show', ['room' => $url]));
 
     $this->assertDatabaseHas('chat_messages', [
       'message' => $message,
@@ -121,11 +121,10 @@ class RoomControllerTest extends TestCase
 
     $message = 'Test message';
 
-    $requestUrl = route('rooms.chatSubmit', ['url' => $url]);
+    $requestUrl = route('rooms.chatSubmit', ['room' => $url]);
     $response = $this->actingAs($user)->post($requestUrl, ['message' => $message]);
 
-    $response->assertRedirect();
-    $response->assertSessionHasErrors(['message']);
+    $response->assertNotFound();
   }
 
   public function test_addChatMessage_asGuest(): void
@@ -135,7 +134,7 @@ class RoomControllerTest extends TestCase
 
     $message = 'Test message';
 
-    $requestUrl = route('rooms.chatSubmit', ['url' => $url]);
+    $requestUrl = route('rooms.chatSubmit', ['room' => $url]);
     $response = $this->post($requestUrl, ['message' => $message]);
 
     $response->assertRedirect(route('auth.login'));
@@ -153,11 +152,11 @@ class RoomControllerTest extends TestCase
 
     $message = 'Test message';
 
-    $requestUrl = route('rooms.chatSubmitJson', ['url' => $url]);
+    $requestUrl = route('rooms.chatSubmitJson', ['room' => $url]);
     $response = $this->actingAs($user, 'api')->postJson($requestUrl, ['message' => $message]);
 
     $response->assertCreated();
-    $response->assertHeader('Location', route('rooms.show', ['url' => $url]));
+    $response->assertHeader('Location', route('rooms.show', ['room' => $url]));
     $response->assertJson([
       'message' => $message,
       'userId'  => $user->id,
@@ -181,7 +180,7 @@ class RoomControllerTest extends TestCase
 
     $message = 'Test message';
 
-    $requestUrl = route('rooms.chatSubmitJson', ['url' => $url]);
+    $requestUrl = route('rooms.chatSubmitJson', ['room' => $url]);
     $response = $this->actingAs($user, 'api')->postJson($requestUrl, ['message' => $message]);
 
     $response->assertNotFound();
@@ -194,7 +193,7 @@ class RoomControllerTest extends TestCase
 
     $message = 'Test message';
 
-    $requestUrl = route('rooms.chatSubmitJson', ['url' => $url]);
+    $requestUrl = route('rooms.chatSubmitJson', ['room' => $url]);
     $response = $this->postJson($requestUrl, ['message' => $message]);
 
     $response->assertUnauthorized();

@@ -51,4 +51,14 @@ class Room extends Model
       'userId' => $this->user_id,
     ];
   }
+
+  /**
+   * Get the route key for the model.
+   *
+   * @return string
+   */
+  public function getRouteKeyName()
+  {
+    return 'url';
+  }
 }

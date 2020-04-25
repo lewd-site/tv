@@ -19,7 +19,7 @@
 @push('modals')
 <div class="add-video-modal" hidden>
   <div class="add-video-modal__inner">
-    <form class="add-video-modal__form" method="POST" action="{{ route('rooms.videoSubmit', ['url' => $room->url]) }}" enctype="multipart/form-data">
+    <form class="add-video-modal__form" method="POST" action="{{ route('rooms.videoSubmit', ['room' => $room->url]) }}" enctype="multipart/form-data">
       @csrf
 
       <input type="text" class="add-video-modal__url input" name="url" placeholder="Ссылка на видео" required />
@@ -29,7 +29,7 @@
 
     <span class="add-video-modal__title"></span>
 
-    <a class="add-video-modal__close" href="{{ route('rooms.show', ['url' => $room->url]) }}" data-draggable="false">
+    <a class="add-video-modal__close" href="{{ route('rooms.show', ['room' => $room->url]) }}" data-draggable="false">
       <img src="/images/close.svg" />
     </a>
   </div>

@@ -14,7 +14,7 @@ class UserControllerTest extends TestCase
   {
     $user = factory(User::class)->create();
 
-    $response = $this->get(route('users.show', ['id' => $user->id]));
+    $response = $this->get(route('users.show', ['user' => $user->id]));
 
     $response->assertSuccessful();
     $response->assertViewIs('users.pages.show');
@@ -22,7 +22,7 @@ class UserControllerTest extends TestCase
 
   public function test_show_notFound(): void
   {
-    $response = $this->get(route('users.show', ['id' => 1]));
+    $response = $this->get(route('users.show', ['user' => 1]));
 
     $response->assertNotFound();
   }
