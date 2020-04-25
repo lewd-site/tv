@@ -46,6 +46,11 @@ class Video extends Model
     return $this->belongsTo(Room::class, 'room_id', 'id');
   }
 
+  protected $dates = [
+    'start_at',
+    'end_at',
+  ];
+
   public function getViewModel(): array
   {
     return [
@@ -53,8 +58,8 @@ class Video extends Model
       'url'     => $this->url,
       'type'    => $this->type,
       'title'   => $this->title,
-      'startAt' => $this->start_at,
-      'endAt'   => $this->end_at,
+      'startAt' => $this->start_at->toIso8601String(),
+      'endAt'   => $this->end_at->toIso8601String(),
       'userId'  => $this->user_id,
       'roomId'  => $this->room_id,
     ];

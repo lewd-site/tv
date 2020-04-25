@@ -1,6 +1,11 @@
 <div class="room-video__inner">
   <div class="room-video__main">
-    <div class="room-video__player"></div>
+    <div class="room-video__player">
+      <div class="room-video__video" id="player">
+      </div>
+
+      <button class="room-video__play" hidden></button>
+    </div>
 
     <h2 class="room-video__title"></h2>
 
@@ -18,6 +23,6 @@
   </div>
 
   <div class="room-video__chat chat">
-  @include('rooms.blocks.chat')
+    @include('rooms.blocks.chat')
   </div>
 </div>

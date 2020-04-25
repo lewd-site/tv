@@ -8,6 +8,7 @@
 </script>
 
 <script src="/js/room.js"></script>
+<script src="https://www.youtube.com/iframe_api" async></script>
 @endpush
 
 @section('title', 'LEWD.TV')

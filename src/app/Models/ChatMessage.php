@@ -50,6 +50,7 @@ class ChatMessage extends Model
       'userAvatar' => 'https://www.gravatar.com/avatar/' . md5(strtolower($this->user->email)) . '.jpg?s=24&d=mp',
       'roomId'     => $this->room_id,
       'roomName'   => $this->room->name,
+      'createdAt'  => $this->created_at->toIso8601String(),
     ];
   }
 }
