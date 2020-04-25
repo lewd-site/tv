@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Video;
 use DateInterval;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -87,14 +88,14 @@ class VideoService
       'user_id'  => $user->id,
     ]);
 
-    event(new VideoCreatedEvent($video));
+    App::terminating(fn () => event(new VideoCreatedEvent($video)));
 
     return $video;
   }
 
   public function delete(Video $video): void
   {
-    event(new VideoDeletedEvent($video));
+    App::terminating(fn () => event(new VideoDeletedEvent($video)));
 
     $video->delete();
   }

@@ -6,6 +6,7 @@ use App\Events\ChatMessageCreatedEvent;
 use App\Models\ChatMessage;
 use App\Models\Room;
 use App\Models\User;
+use Illuminate\Support\Facades\App;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
@@ -76,7 +77,7 @@ class RoomService
       'room_id' => $room->id,
     ]);
 
-    event(new ChatMessageCreatedEvent($message));
+    App::terminating(fn () => event(new ChatMessageCreatedEvent($message)));
 
     return $message;
   }
