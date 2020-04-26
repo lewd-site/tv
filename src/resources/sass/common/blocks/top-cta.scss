@@ -25,6 +25,8 @@
   &__button {
     @extend %button, %button_large, %button_secondary;
 
+    position: relative;
+
     background: $gray-15;
 
     border-width: 2px;
@@ -36,5 +38,36 @@
     width: 370px;
     height: 100px;
     padding: 0;
+
+    overflow: hidden;
+
+    &::after {
+      content: '';
+
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+
+      display: block;
+
+      background: linear-gradient(186.24deg, #E3833E 27.59%, #942FD1 100.68%);
+
+      opacity: 0;
+      transition: opacity 75ms ease-out;
+    }
+
+    & > span {
+      z-index: 1;
+    }
+
+    &:hover {
+      border: 0;
+
+      &::after {
+        opacity: 1;
+      }
+    }
   }
 }

@@ -5,7 +5,14 @@
   С любого девайса, в любом месте.
 </p>
 
+@spaceless
 <div class="top-cta__buttons">
-  <a class="top-cta__button" href="{{ route('rooms.list') }}">Все комнаты</a>
-  <a class="top-cta__button" href="{{ route('rooms.create') }}">Создать комнату</a>
+  <a class="top-cta__button" href="{{ route('rooms.list') }}" data-draggable="false">
+    <span>Все комнаты</span>
+  </a>
+
+  <a class="top-cta__button" href="{{ route('rooms.create') }}" data-draggable="false">
+    <span>Создать комнату</span>
+  </a>
 </div>
+@endspaceless
