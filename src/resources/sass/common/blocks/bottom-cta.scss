@@ -52,7 +52,7 @@
       background: linear-gradient(186.24deg, #E3833E 27.59%, #942FD1 100.68%);
 
       opacity: 0;
-      transition: opacity 75ms ease-out;
+      transition: opacity 140ms ease-out;
     }
 
     & > span {
@@ -72,7 +72,7 @@
     position: absolute;
     top: -39px;
     left: -42px;
-    transition: top 75ms ease-out, left 75ms ease-out;
+    transition: top 140ms ease-out, left 140ms ease-out;
 
     background-image: url('/images/bottom-cta-d-1.svg');
     background-position: center;
@@ -92,7 +92,7 @@
     position: absolute;
     top: -103px;
     right: -96px;
-    transition: top 75ms ease-out, right 75ms ease-out;
+    transition: top 140ms ease-out, right 140ms ease-out;
 
     background-image: url('/images/bottom-cta-d-2.svg');
     background-position: center;

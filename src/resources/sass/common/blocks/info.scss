@@ -3,7 +3,7 @@
     @extend %container;
 
     background: url('/images/info.svg');
-    background-position: center;
+    background-position: 50% calc(50% - 15px);
     background-repeat: no-repeat;
 
     padding: 105px 0 150px;

@@ -12,6 +12,8 @@
 
   &__info {
     @extend %container-wrapper;
+
+    background: $gray-16;
   }
 
   &__bottom-cta {
