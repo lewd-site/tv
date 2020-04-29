@@ -4,7 +4,7 @@
   <h1 class="login__title">Вход</h1>
 
   <div class="login__email">
-    <input type="email" class="input" name="email" required placeholder="e-mail" />
+    <input type="email" class="input" name="email" value="{{ old('email') }}" required placeholder="e-mail" />
     <span class="input-icon"></span>
     <span class="input-label">e-mail</span>
 
@@ -14,7 +14,7 @@
   </div>
 
   <div class="login__password">
-    <input type="password" class="input" name="password" required minlength="8" placeholder="пароль" />
+    <input type="password" class="input" name="password" value="" required minlength="8" placeholder="пароль" />
     <span class="input-icon"></span>
     <span class="input-label">пароль</span>
 

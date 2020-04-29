@@ -22,7 +22,7 @@
     <form class="add-video-modal__form" method="POST" action="{{ route('rooms.videoSubmit', ['room' => $room->url]) }}" enctype="multipart/form-data">
       @csrf
 
-      <input type="text" class="add-video-modal__url input" name="url" placeholder="Ссылка на видео" required />
+      <input type="text" class="add-video-modal__url input" name="url" value="{{ old('url') }}" placeholder="Ссылка на видео" required />
 
       <button type="submit" class="add-video-modal__submit">Добавить</button>
     </form>

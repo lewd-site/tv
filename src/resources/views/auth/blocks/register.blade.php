@@ -4,7 +4,7 @@
   <h1 class="register__title">Регистрация</h1>
 
   <div class="register__name">
-    <input type="text" class="input" name="name" required placeholder="имя пользователя" />
+    <input type="text" class="input" name="name" value="{{ old('name') }}" required placeholder="имя пользователя" />
     <span class="input-icon"></span>
     <span class="input-label">имя пользователя</span>
 
@@ -14,7 +14,7 @@
   </div>
 
   <div class="register__email">
-    <input type="email" class="input" name="email" required placeholder="e-mail" />
+    <input type="email" class="input" name="email" value="{{ old('email') }}"  required placeholder="e-mail" />
     <span class="input-icon"></span>
     <span class="input-label">e-mail</span>
 
@@ -24,7 +24,7 @@
   </div>
 
   <div class="register__password">
-    <input type="password" class="input" name="password" required minlength="8" placeholder="пароль" />
+    <input type="password" class="input" name="password" value=""  required minlength="8" placeholder="пароль" />
     <span class="input-icon"></span>
     <span class="input-label">пароль</span>
 
@@ -34,7 +34,7 @@
   </div>
 
   <div class="register__confirm-password">
-    <input type="password" class="input" name="confirm-password" required minlength="8" placeholder="повторите пароль" />
+    <input type="password" class="input" name="confirm-password" value=""  required minlength="8" placeholder="повторите пароль" />
     <span class="input-icon"></span>
     <span class="input-label">повторите пароль</span>
 

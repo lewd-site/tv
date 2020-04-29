@@ -65,10 +65,8 @@ class RoomController extends Controller
     $input = $request->validated();
     try {
       $room = $this->roomService->create($user, $input['url'], $input['name']);
-    } catch (BadRequestHttpException $e) {
-      return redirect()->back()->withErrors(['url' => $e->getMessage()]);
-    } catch (ConflictHttpException $e) {
-      return redirect()->back()->withErrors(['url' => $e->getMessage()]);
+    } catch (BadRequestHttpException | ConflictHttpException $e) {
+      return redirect()->back()->withInput()->withErrors(['url' => $e->getMessage()]);
     }
 
     return redirect()->route('rooms.show', ['room' => $room->url]);
@@ -81,7 +79,7 @@ class RoomController extends Controller
     try {
       $this->videoService->create($room, $user, $input['url']);
     } catch (BadRequestHttpException $e) {
-      return redirect()->back()->withErrors(['url' => $e->getMessage()]);
+      return redirect()->back()->withInput()->withErrors(['url' => $e->getMessage()]);
     }
 
     return redirect()->route('rooms.show', ['room' => $room->url]);

@@ -32,7 +32,7 @@ class AuthController extends Controller
   {
     $credentials = $request->validated();
     if (!Auth::attempt($credentials)) {
-      return redirect()->back()->withErrors([
+      return redirect()->back()->withInput()->withErrors([
         'email' => 'User not found or password is incorrect',
       ]);
     }
@@ -61,7 +61,7 @@ class AuthController extends Controller
         $credentials['password']
       );
     } catch (ConflictHttpException $e) {
-      return redirect()->back()->withErrors(['name' => $e->getMessage()]);
+      return redirect()->back()->withInput()->withErrors(['name' => $e->getMessage()]);
     }
 
     Auth::login($user);

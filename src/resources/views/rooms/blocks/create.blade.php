@@ -5,7 +5,7 @@
     <h2 class="create-room__title">Название комнаты</h2>
 
     <div class="create-room__name">
-      <input type="text" class="input" name="name" required placeholder="название" />
+      <input type="text" class="input" name="name" value="{{ old('name') }}" required placeholder="название" />
       <span class="input-icon"></span>
       <span class="input-label">название</span>
 
@@ -27,9 +27,9 @@
     <h3 class="create-room__label">ID комнаты</h3>
 
     <div class="create-room__url">
-      <input type="text" class="input" name="url" required pattern="[A-Za-z0-9_-]+" placeholder="id" />
+      <input type="text" class="input" name="url" value="{{ old('url') }}" required pattern="[A-Za-z0-9_-]+" placeholder="URL" />
       <span class="input-icon"></span>
-      <span class="input-label">id</span>
+      <span class="input-label">URL</span>
 
       @error('url')
       <span class="input-error">{{ $message }}</span>
