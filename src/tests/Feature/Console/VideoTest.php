@@ -4,6 +4,7 @@ namespace Tests\Feature\Console;
 
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 class VideoTest extends TestCase
@@ -12,14 +13,16 @@ class VideoTest extends TestCase
 
   public function test_deleteEnded(): void
   {
+    Event::fake();
+
     $endedVideo = factory(Video::class)->create([
       'start_at' => now()->subMinute(10),
-      'end_at' => now()->subMinute(5),
+      'end_at'   => now()->subMinute(5),
     ]);
 
     $notEndedVideo = factory(Video::class)->create([
       'start_at' => now()->addMinute(5),
-      'end_at' => now()->addMinute(10),
+      'end_at'   => now()->addMinute(10),
     ]);
 
     $this->artisan('video:delete-ended')

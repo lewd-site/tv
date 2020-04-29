@@ -6,6 +6,7 @@ use App\Models\Room;
 use App\Models\User;
 use App\Services\RoomService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Tests\TestCase;
 
@@ -61,6 +62,8 @@ class RoomServiceTest extends TestCase
 
   public function test_addChatMessage(): void
   {
+    Event::fake();
+
     $url = 'room';
     /** @var Room */
     $room = factory(Room::class)->create(['url' => $url]);

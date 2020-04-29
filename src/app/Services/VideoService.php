@@ -7,58 +7,46 @@ use App\Events\VideoDeletedEvent;
 use App\Models\Room;
 use App\Models\User;
 use App\Models\Video;
-use DateInterval;
+use App\Services\Video\ProviderInterface;
+use App\Services\Video\YouTubeProvider;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class VideoService
 {
   const CACHE_TTL = 4 * 60 * 60;
 
-  /**
-   * @throws BadRequestHttpException
-   */
-  protected function getYouTubeInfo(string $url): array
+  /** @var ProviderInterface[] */
+  private array $providers = [];
+
+  public function __construct(YouTubeProvider $youTubeProvider)
   {
-    $matches = [];
-    if (!preg_match('/^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([A-Za-z0-9_-]+).*$/', $url, $matches)) {
-      throw new BadRequestHttpException("$url is not a valid YouTube URL");
-    }
+    $this->providers[] = $youTubeProvider;
+  }
 
-    $id = $matches[1];
-    $cacheKey = "video:youtube:$id";
+  /**
+   * @throws NotFoundHttpException
+   */
+  private function getVideoInfo(string $url): array
+  {
+    $cacheKey = "video:$url";
     if (Cache::has($cacheKey)) {
-      $data = Cache::get($cacheKey);
-    } else {
-      $key = config('services.youtube.key');
-      $serviceUrl = "https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=$id&key=$key";
-      $response = file_get_contents($serviceUrl);
-      if ($response === false) {
-        throw new BadRequestHttpException("Can't get video info");
-      }
-
-      $responseData = json_decode($response, true);
-      if (empty($responseData['items'])) {
-        throw new BadRequestHttpException("Video $url not found");
-      }
-
-      $item = $responseData['items'][0];
-      $interval = new DateInterval($item['contentDetails']['duration']);
-      $duration = $interval->s + 60 * $interval->i + 3600 * $interval->h + 86400 * $interval->d;
-
-      $data = [
-        'url'      => "https://www.youtube.com/watch?v=$id",
-        'type'     => 'youtube',
-        'title'    => $item['snippet']['title'],
-        'duration' => $duration,
-      ];
-
-      Cache::put($cacheKey, $data, static::CACHE_TTL);
+      return Cache::get($cacheKey);
     }
 
-    return $data;
+    foreach ($this->providers as $provider) {
+      if ($provider->check($url)) {
+        $data = $provider->getData($url);
+        Cache::put($cacheKey, $data, static::CACHE_TTL);
+
+        return $data;
+      }
+    }
+
+    throw new NotFoundHttpException('Video not found');
   }
 
   /**
@@ -66,7 +54,7 @@ class VideoService
    */
   public function create(Room $room, User $user, string $url): Video
   {
-    $data = $this->getYouTubeInfo($url);
+    $data = $this->getVideoInfo($url);
 
     /** @var ?string */
     $playlistEndAt = Video::where('room_id', $room->id)
