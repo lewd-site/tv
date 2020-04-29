@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-          const url = `https://noembed.com/embed?url=${encodeURIComponent(urlInput.value)}`;
+          const url = `/api/oembed?url=${encodeURIComponent(urlInput.value)}`;
           const response = await Axios.get<OEmbedResponse>(url);
           if (response.status === 200) {
             model.addVideoModalVideoTitle.set(response.data.title);

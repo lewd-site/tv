@@ -31,6 +31,7 @@ Route::post('/broadcasting/auth', function (Request $request) {
 
 Route::name('common.')->group(function () {
   Route::get('api/time', 'CommonController@time')->name('time');
+  Route::get('api/oembed', 'OEmbedController@oembed')->name('oembed');
 
   Route::get('', 'CommonController@landing')->name('landing');
   Route::get('about', 'CommonController@about')->name('about');
