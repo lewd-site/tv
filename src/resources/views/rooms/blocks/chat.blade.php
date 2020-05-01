@@ -33,7 +33,7 @@
     <form class="chat__form" method="POST" action="{{ route('rooms.chatSubmit', ['room' => $room->url]) }}" enctype="multipart/form-data">
       @csrf
 
-      <input type="text" class="input chat__input" name="message" value="{{ old('message') }}" required autocomplete="off" />
+      <input type="text" class="input chat__input" name="message" value="{{ old('message') }}" required maxlength="1000" autocomplete="off" />
 
       <button type="submit" hidden>Отправить</button>
     </form>

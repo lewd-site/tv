@@ -11,8 +11,10 @@ const mix = require('laravel-mix');
  |
  */
 
-mix.ts('resources/ts/app.ts', 'public/js')
-  .ts('resources/ts/register.ts', 'public/js')
-  .ts('resources/ts/room.ts', 'public/js')
-  .sass('resources/sass/app.scss', 'public/css')
-  .extract(['axios', 'vue']);
+const scripts = ['app', 'login', 'register', 'create-room', 'room'];
+const styles = ['app'];
+const libs = ['axios', 'laravel-echo', 'pusher-js', 'vue'];
+
+scripts.forEach(script => mix.ts(`resources/ts/${script}.ts`, 'public/js'));
+styles.forEach(style => mix.sass(`resources/sass/${style}.scss`, 'public/css'));
+mix.extract(libs).version();

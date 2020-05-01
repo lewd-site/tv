@@ -1,5 +1,9 @@
 @extends('common.layout')
 
+@push('scripts')
+<script src="{{ mix('/js/login.js') }}"></script>
+@endpush
+
 @section('title', 'LEWD.TV')
 
 @section('content')

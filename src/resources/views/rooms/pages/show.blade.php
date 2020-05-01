@@ -7,7 +7,7 @@
   window.messages = <?= json_encode($messages->map(fn ($message) => $message->getViewModel())); ?>;
 </script>
 
-<script src="/js/room.js"></script>
+<script src="{{ mix('/js/room.js') }}"></script>
 <script src="https://www.youtube.com/iframe_api" async></script>
 @endpush
 

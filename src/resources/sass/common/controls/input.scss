@@ -38,13 +38,13 @@
     box-shadow: none;
   }
 
-  &:required:not(:placeholder-shown):invalid ~ .input-icon {
+  &:required:not(:placeholder-shown).invalid ~ .input-icon {
     display: block;
 
     background: url('/images/error.svg');
   }
 
-  &:required:not(:placeholder-shown):valid ~ .input-icon {
+  &:required:not(:placeholder-shown).valid ~ .input-icon {
     display: block;
 
     background: url('/images/ok.svg');

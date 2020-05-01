@@ -1,9 +1,8 @@
-import Axios from 'axios';
-import apiClient from './axios';
+import axios from './axios';
 import Chat from './components/Chat.vue';
 import Playlist from './components/Playlist.vue';
-import Observable from './observable';
 import { Room, ChatMessage, Video } from './types';
+import { Observable } from './utils';
 
 declare global {
   interface Window {
@@ -56,7 +55,7 @@ const now = async () => {
   } else {
     try {
       const timeBefore = new Date().getTime();
-      const serverTime = new Date((await apiClient.get<TimeResponse>('/api/time')).data.time).getTime();
+      const serverTime = new Date((await axios.get<TimeResponse>('/api/time')).data.time).getTime();
       const timeAfter = new Date().getTime();
       const localTime = (timeBefore + timeAfter) / 2;
       serverTimeOffset = serverTime - localTime;
@@ -324,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           const url = `/api/rooms/${window.room?.url}/videos`;
           const videoUrl = urlInput.value;
-          const response = await apiClient.post(url, { url: videoUrl }, { withCredentials: true });
+          const response = await axios.post(url, { url: videoUrl }, { withCredentials: true });
           if (response.status === 201) {
             urlInput.value = '';
             model.showAddVideoModal.set(false);
@@ -353,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
           const url = `/api/oembed?url=${encodeURIComponent(urlInput.value)}`;
-          const response = await Axios.get<OEmbedResponse>(url);
+          const response = await axios.get<OEmbedResponse>(url);
           if (response.status === 200) {
             model.addVideoModalVideoTitle.set(response.data.title);
           } else {
@@ -409,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const url = `/api/rooms/${window.room?.url}/messages`;
       const message = messageInput.value;
-      const response = await apiClient.post(url, { message }, { withCredentials: true });
+      const response = await axios.post(url, { message }, { withCredentials: true });
       if (response.status === 201) {
         messageInput.value = '';
       } else {
