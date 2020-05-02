@@ -24,7 +24,7 @@ class CreateVideoRequest extends FormRequest
   public function rules()
   {
     return [
-      'url' => 'required|max:255',
+      'url' => 'required|max:2048',
     ];
   }
 }

@@ -39,7 +39,7 @@ ul, ol {
 }
 
 [hidden] {
-  display: none;
+  display: none !important;
   visibility: hidden;
   pointer-events: none;
   user-select: none;

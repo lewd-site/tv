@@ -1,0 +1,13 @@
+.add-video-page {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: center;
+
+  &__add-video {
+    @extend %container, %block;
+
+    max-width: 560px;
+    padding: 0;
+  }
+}

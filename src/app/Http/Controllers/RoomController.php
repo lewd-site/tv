@@ -12,6 +12,7 @@ use App\Services\RoomService;
 use App\Services\VideoService;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RoomController extends Controller
 {
@@ -72,13 +73,18 @@ class RoomController extends Controller
     return redirect()->route('rooms.show', ['room' => $room->url]);
   }
 
-  public function videoSubmit(CreateVideoRequest $request, Room $room)
+  public function addVideo(Room $room)
+  {
+    return view('rooms.pages.add-video', ['room' => $room]);
+  }
+
+  public function addVideoSubmit(CreateVideoRequest $request, Room $room)
   {
     $user = auth()->user();
     $input = $request->validated();
     try {
       $this->videoService->create($room, $user, $input['url']);
-    } catch (BadRequestHttpException $e) {
+    } catch (NotFoundHttpException $e) {
       return redirect()->back()->withInput()->withErrors(['url' => $e->getMessage()]);
     }
 
@@ -91,7 +97,7 @@ class RoomController extends Controller
     $input = $request->validated();
     try {
       $video = $this->videoService->create($room, $user, $input['url']);
-    } catch (BadRequestHttpException $e) {
+    } catch (NotFoundHttpException $e) {
       return response()->json(['error' => $e->getMessage()], 400);
     }
 

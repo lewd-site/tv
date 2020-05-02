@@ -87,6 +87,40 @@ class RoomControllerTest extends TestCase
     $response->assertRedirect(route('auth.login'));
   }
 
+  public function test_addVideo(): void
+  {
+    $url = 'room';
+    factory(Room::class)->create(['url' => $url]);
+
+    /** @var User */
+    $user = factory(User::class)->create();
+
+    $response = $this->actingAs($user)->get(route('rooms.addVideo', ['room' => $url]));
+
+    $response->assertSuccessful();
+    $response->assertViewIs('rooms.pages.add-video');
+  }
+
+  public function test_addVideo_asGuest(): void
+  {
+    $url = 'room';
+    factory(Room::class)->create(['url' => $url]);
+
+    $response = $this->get(route('rooms.addVideo', ['room' => $url]));
+
+    $response->assertRedirect(route('auth.login'));
+  }
+
+  public function test_addVideo_roomNotFound(): void
+  {
+    /** @var User */
+    $user = factory(User::class)->create();
+
+    $response = $this->actingAs($user)->get(route('rooms.addVideo', ['room' => 'room']));
+
+    $response->assertNotFound();
+  }
+
   public function test_addChatMessage(): void
   {
     $url = 'room';

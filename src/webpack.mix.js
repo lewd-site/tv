@@ -11,7 +11,7 @@ const mix = require('laravel-mix');
  |
  */
 
-const scripts = ['app', 'login', 'register', 'create-room', 'room'];
+const scripts = ['app', 'login', 'register', 'create-room', 'room', 'add-video'];
 const styles = ['app'];
 const libs = ['axios', 'laravel-echo', 'pusher-js', 'vue'];
 

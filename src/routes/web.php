@@ -60,7 +60,9 @@ Route::name('rooms.')->group(function () {
   Route::get('create', 'RoomController@create')->name('create')->middleware('auth');
   Route::post('create', 'RoomController@createSubmit')->name('createSubmit')->middleware('auth');
 
-  Route::post('{room}/videos', 'RoomController@videoSubmit')->name('videoSubmit')->middleware('auth');
+  Route::get('{room}/add-video', 'RoomController@addVideo')->name('addVideo')->middleware('auth');
+  Route::post('{room}/add-video', 'RoomController@addVideoSubmit')->name('addVideoSubmit')->middleware('auth');
+
   Route::post('{room}/messages', 'RoomController@chatSubmit')->name('chatSubmit')->middleware('auth');
 
   Route::get('rooms', 'RoomController@list')->name('list');

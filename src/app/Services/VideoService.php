@@ -50,7 +50,7 @@ class VideoService
   }
 
   /**
-   * @throws BadRequestHttpException
+   * @throws NotFoundHttpException
    */
   public function create(Room $room, User $user, string $url): Video
   {
