@@ -197,10 +197,6 @@ class AddVideoModalViewModel {
     }
 
     const addVideoButton = document.querySelector('.room-playlist__add');
-    if (!addVideoButton) {
-      throw new Error('Add video button not found');
-    }
-
     const closeButton = this.modal.querySelector('.add-video__close');
     if (!closeButton) {
       throw new Error('Close button not found');
@@ -243,7 +239,7 @@ class AddVideoModalViewModel {
 
     this.isVisible.subscribe(this.onVisibilityChange);
 
-    addVideoButton.addEventListener('click', this.onAddVideoButtonClick);
+    addVideoButton?.addEventListener('click', this.onAddVideoButtonClick);
     this.modal.addEventListener('click', this.onModalClick);
     form.addEventListener('submit', this.onSubmit);
     closeButton.addEventListener('click', this.onCloseButtonClick);
