@@ -1,12 +1,12 @@
-export type Listener<T> = (value: T, prevValue: T) => void;
-export type Unsubscriber = () => void;
+export type ObserverListener<T> = (value: T, prevValue: T) => void;
+export type ObserverUnsubscriber = () => void;
 
 export class Observable<T> {
-  private listeners: Listener<T>[] = [];
+  private listeners: ObserverListener<T>[] = [];
 
   public constructor(private value: T) { }
 
-  public subscribe(listener: Listener<T>): Unsubscriber {
+  public subscribe(listener: ObserverListener<T>): ObserverUnsubscriber {
     this.listeners.push(listener);
 
     return () => this.unsubscribe(listener);
@@ -24,7 +24,7 @@ export class Observable<T> {
     }
   }
 
-  public unsubscribe(listener: Listener<T>): void {
+  public unsubscribe(listener: ObserverListener<T>): void {
     this.listeners = this.listeners.filter(l => l !== listener);
   }
 

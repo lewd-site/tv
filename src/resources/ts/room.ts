@@ -2,7 +2,7 @@ import axios from './axios';
 import Chat from './components/Chat.vue';
 import Playlist from './components/Playlist.vue';
 import { Room, ChatMessage, Video } from './types';
-import { Observable } from './utils';
+import { eventBus, Observable } from './utils';
 
 declare global {
   interface Window {
@@ -164,6 +164,125 @@ class RoomModel {
   }
 }
 
+class AddVideoModalViewModel {
+  private readonly modal: HTMLElement | null;
+  private readonly urlInput: HTMLInputElement | null;
+  private readonly isVisible = new Observable(false);
+
+  private submittingForm = false;
+
+  public constructor() {
+    this.modal = document.querySelector('.add-video-modal');
+    if (!this.modal) {
+      throw new Error('Add video modal not found');
+    }
+
+    const form = this.modal.querySelector('.add-video__inner');
+    if (!form) {
+      throw new Error('Add video form not found');
+    }
+
+    const addVideoButton = document.querySelector('.room-playlist__add');
+    if (!addVideoButton) {
+      throw new Error('Add video button not found');
+    }
+
+    const closeButton = this.modal.querySelector('.add-video__close');
+    if (!closeButton) {
+      throw new Error('Close button not found');
+    }
+
+    this.urlInput = this.modal.querySelector<HTMLInputElement>('.add-video__url > .input');
+    if (!this.urlInput) {
+      throw new Error('URL input not found');
+    }
+
+    const submitButton = this.modal.querySelector('.add-video__submit');
+    if (!submitButton) {
+      throw new Error('Submit button not found');
+    }
+
+    const cancelButton = this.modal.querySelector('.add-video__cancel');
+    if (!cancelButton) {
+      throw new Error('Cancel button not found');
+    }
+
+    this.isVisible.subscribe(this.onVisibilityChange);
+
+    addVideoButton.addEventListener('click', this.onAddVideoButtonClick);
+    this.modal.addEventListener('click', this.onModalClick);
+    form.addEventListener('submit', this.onSubmit);
+    closeButton.addEventListener('click', this.onCloseButtonClick);
+    cancelButton.addEventListener('click', this.onCancelButtonClick);
+  }
+
+  public open = () => {
+    this.isVisible.set(true);
+  };
+
+  public close = () => {
+    this.isVisible.set(false);
+  };
+
+  private onVisibilityChange = (visible: boolean) => {
+    if (visible) {
+      this.modal?.removeAttribute('hidden');
+      eventBus.emit('addVideoModalOpened');
+    } else {
+      this.modal?.setAttribute('hidden', 'true');
+      eventBus.emit('addVideoModalClosed');
+    }
+  };
+
+  private onAddVideoButtonClick = (e: Event) => {
+    e.preventDefault();
+    this.open();
+  };
+
+  private onModalClick = (e: Event) => {
+    if (e.target !== this.modal) {
+      return;
+    }
+
+    this.close();
+  };
+
+  private onSubmit = async (e: Event) => {
+    e.preventDefault();
+
+    if (this.submittingForm) {
+      return;
+    }
+
+    this.submittingForm = true;
+    this.urlInput?.setAttribute('disabled', 'true');
+
+    try {
+      const url = `/api/rooms/${window.room?.url}/videos`;
+      const videoUrl = this.urlInput?.value;
+      const response = await axios.post(url, { url: videoUrl }, { withCredentials: true });
+      if (response.status === 201) {
+        this.close();
+      } else {
+        console.error(`Error: ${response.status} ${response.statusText}`);
+      }
+    } finally {
+      this.submittingForm = false;
+      this.urlInput?.removeAttribute('disabled');
+    }
+  };
+
+  private onCloseButtonClick = (e: Event) => {
+    e.preventDefault();
+    this.close();
+  };
+
+  private onCancelButtonClick = (e: Event) => {
+    e.preventDefault();
+    this.close();
+  };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const model = new RoomModel();
   model.videos.set(window.videos || []);
@@ -184,6 +303,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const chatViewModel = new Chat({ propsData: { messages: model.messages } });
   chatViewModel.$mount('.chat__main', true);
+
+  const addVideoModalViewModel = new AddVideoModalViewModel();
 
   // Handle play button.
 

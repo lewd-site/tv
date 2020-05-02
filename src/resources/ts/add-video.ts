@@ -1,5 +1,6 @@
-import { field, Field, Observable } from './utils';
+import Axios, { CancelTokenSource } from 'axios';
 import axios from './axios';
+import { eventBus, field, Field, Observable } from './utils';
 
 interface OEmbedResponse {
   readonly html: string;
@@ -40,6 +41,35 @@ interface Info {
 
 type State = Placeholder | Loading | Error | Info;
 
+class Api {
+  private cache: { [key: string]: OEmbedResponse } = {};
+  private cancelTokenSource: CancelTokenSource | null = null;
+
+  public getOEmbedInfo = async (url: string): Promise<OEmbedResponse> => {
+    if (this.cancelTokenSource) {
+      this.cancelTokenSource.cancel();
+      this.cancelTokenSource = null;
+    }
+
+    if (typeof this.cache[url] !== 'undefined') {
+      return this.cache[url];
+    }
+
+    this.cancelTokenSource = Axios.CancelToken.source();
+
+    const serviceUrl = `/api/oembed?url=${encodeURIComponent(url)}`;
+    const response = await axios.get<OEmbedResponse>(serviceUrl, {
+      cancelToken: this.cancelTokenSource.token,
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+
+    return this.cache[url] = response.data;
+  };
+}
+
 const youTubeRegExp = /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw]).*$/;
 
 class AddVideoViewModel {
@@ -52,7 +82,7 @@ class AddVideoViewModel {
   private readonly fields: { [key: string]: Field };
   private readonly state = new Observable<State>({ type: 'placeholder' });
 
-  public constructor() {
+  public constructor(private readonly api: Api) {
     const form = document.querySelector<HTMLElement>('.add-video');
     if (!form) {
       throw new Error('Add video form not found');
@@ -73,12 +103,26 @@ class AddVideoViewModel {
 
     const urlInput = this.fields['url'].element;
     urlInput.addEventListener('input', this.onUrlChange);
+
+    if (urlInput.value.length) {
+      this.onUrlChange();
+    }
+
+    eventBus.subscribe('addVideoModalOpened', () => {
+      this.onUrlChange();
+    });
+
+    eventBus.subscribe('addVideoModalClosed', () => {
+      this.fields['url'].element.value = '';
+      this.state.set({ type: 'placeholder' });
+    });
   }
 
   private onStateChange = (state: State) => {
+    const urlInput = this.fields['url'].element;
     switch (state.type) {
       case 'loading':
-        this.fields['url'].element.classList.add('loading');
+        urlInput.classList.add('loading');
       case 'placeholder':
         this.placeholder?.removeAttribute('hidden');
         this.error?.setAttribute('hidden', 'true');
@@ -89,14 +133,18 @@ class AddVideoViewModel {
         this.placeholder?.setAttribute('hidden', 'true');
         this.error?.removeAttribute('hidden');
         this.info?.setAttribute('hidden', 'true');
-        this.fields['url'].element.classList.remove('loading');
+
+        urlInput.classList.remove('loading');
+
+        urlInput.classList.remove('valid');
+        urlInput.classList.add('invalid');
         break;
 
       case 'info':
-        this.placeholder?.setAttribute('hidden', 'true');
-        this.error?.setAttribute('hidden', 'true');
-        this.info?.removeAttribute('hidden');
-        this.fields['url'].element.classList.remove('loading');
+        urlInput.classList.remove('loading');
+
+        urlInput.classList.remove('invalid');
+        urlInput.classList.add('valid');
 
         if (this.infoThumbnail) {
           this.infoThumbnail.src = state.thumbnailUrl;
@@ -110,6 +158,10 @@ class AddVideoViewModel {
           this.infoAuthor.textContent = state.author;
           this.infoAuthor.setAttribute('href', state.authorUrl);
         }
+
+        this.placeholder?.setAttribute('hidden', 'true');
+        this.error?.setAttribute('hidden', 'true');
+        this.info?.removeAttribute('hidden');
         break;
     }
   };
@@ -125,28 +177,24 @@ class AddVideoViewModel {
     this.state.set({ type: 'loading' });
 
     try {
-      const url = `/api/oembed?url=${encodeURIComponent(value)}`;
-      const response = await axios.get<OEmbedResponse>(url);
-      if (response.status === 200) {
-        const { data } = response;
-        this.state.set({
-          type: 'info',
-          thumbnailUrl: data.thumbnail_url,
-          title: data.title,
-          author: data.author_name,
-          authorUrl: data.author_url,
-        });
-      } else {
-        console.error(`Error: ${response.status} ${response.statusText}`);
+      const data = await this.api.getOEmbedInfo(value);
+      this.state.set({
+        type: 'info',
+        thumbnailUrl: data.thumbnail_url,
+        title: data.title,
+        author: data.author_name,
+        authorUrl: data.author_url,
+      });
+    } catch (e) {
+      if (!Axios.isCancel(e)) {
+        console.error(e);
         this.state.set({ type: 'error' });
       }
-    } catch (e) {
-      console.error(`Error: ${e}`);
-      this.state.set({ type: 'error' });
     }
   };
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const viewModel = new AddVideoViewModel();
+  const api = new Api();
+  const viewModel = new AddVideoViewModel(api);
 });

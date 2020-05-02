@@ -1,0 +1,17 @@
+.add-video-modal {
+  @extend %modal;
+
+  background: rgba(0, 0, 0, 0.4);
+
+  cursor: pointer;
+
+  &__inner {
+    @extend %block;
+
+    width: 560px;
+
+    padding: 0;
+
+    cursor: initial;
+  }
+}

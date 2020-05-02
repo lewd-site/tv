@@ -8,6 +8,7 @@
 </script>
 
 <script src="{{ mix('/js/room.js') }}"></script>
+<script src="{{ mix('/js/add-video.js') }}"></script>
 <script src="https://www.youtube.com/iframe_api" async></script>
 @endpush
 
@@ -24,3 +25,7 @@
   </section>
 </main>
 @endsection
+
+@push('modals')
+@include('rooms.modals.add-video')
+@endpush

@@ -10,4 +10,11 @@
     max-width: 560px;
     padding: 0;
   }
+
+  .add-video {
+    &__main {
+      border-left: 2px solid $gray-18;
+      border-right: 2px solid $gray-18;
+    }
+  }
 }
