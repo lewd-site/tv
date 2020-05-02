@@ -57,6 +57,7 @@ const syncVideo = async () => {
 
   const video = await window.model.getCurrentVideo();
   if (!video) {
+    window.player.pauseVideo();
     return;
   }
 
@@ -67,10 +68,18 @@ const syncVideo = async () => {
 
   const videoId = match[1];
   const currentVideoUrl = window.player.getVideoUrl();
+  if (!currentVideoUrl) {
+    window.player.loadVideoById({ videoId });
+    window.player.playVideo();
+    setTimeout(syncVideoTime, 1000);
+    return;
+  }
+
   const currentVideoMatch = currentVideoUrl.match(youTubeRegExp);
   if (!currentVideoMatch) {
     window.player.loadVideoById({ videoId });
     window.player.playVideo();
+    setTimeout(syncVideoTime, 1000);
     return;
   }
 
@@ -78,6 +87,7 @@ const syncVideo = async () => {
   if (currentVideoId !== videoId) {
     window.player.loadVideoById({ videoId });
     window.player.playVideo();
+    setTimeout(syncVideoTime, 1000);
   }
 };
 
@@ -93,7 +103,7 @@ const syncVideoTime = async () => {
 
   const timeNow = await now();
   const playerTime = window.player.getCurrentTime();
-  const time = (timeNow - new Date(video.startAt).getTime()) / 1000;
+  const time = (timeNow - new Date(video.startAt).getTime()) / 1000 + video.offset;
   if (Math.abs(playerTime - time) > 1.0) {
     window.player.seekTo(time, true);
   }
@@ -167,6 +177,10 @@ class RoomModel {
 class AddVideoModalViewModel {
   private readonly modal: HTMLElement | null;
   private readonly urlInput: HTMLInputElement | null;
+  private readonly enableStart: HTMLInputElement | null;
+  private readonly enableEnd: HTMLInputElement | null;
+  private readonly startInput: HTMLInputElement | null;
+  private readonly endInput: HTMLInputElement | null;
   private readonly isVisible = new Observable(false);
 
   private submittingForm = false;
@@ -195,6 +209,26 @@ class AddVideoModalViewModel {
     this.urlInput = this.modal.querySelector<HTMLInputElement>('.add-video__url > .input');
     if (!this.urlInput) {
       throw new Error('URL input not found');
+    }
+
+    this.enableStart = this.modal.querySelector<HTMLInputElement>('.add-video__enable-start > input');
+    if (!this.enableStart) {
+      throw new Error('Enable start input not found');
+    }
+
+    this.enableEnd = this.modal.querySelector<HTMLInputElement>('.add-video__enable-end > input');
+    if (!this.enableEnd) {
+      throw new Error('Enable end input not found');
+    }
+
+    this.startInput = this.modal.querySelector<HTMLInputElement>('.add-video__start');
+    if (!this.startInput) {
+      throw new Error('Start input not found');
+    }
+
+    this.endInput = this.modal.querySelector<HTMLInputElement>('.add-video__end');
+    if (!this.endInput) {
+      throw new Error('End input not found');
     }
 
     const submitButton = this.modal.querySelector('.add-video__submit');
@@ -250,17 +284,21 @@ class AddVideoModalViewModel {
   private onSubmit = async (e: Event) => {
     e.preventDefault();
 
-    if (this.submittingForm) {
+    if (this.submittingForm || !this.urlInput) {
       return;
     }
 
     this.submittingForm = true;
-    this.urlInput?.setAttribute('disabled', 'true');
+    this.urlInput.disabled = true;
 
     try {
       const url = `/api/rooms/${window.room?.url}/videos`;
-      const videoUrl = this.urlInput?.value;
-      const response = await axios.post(url, { url: videoUrl }, { withCredentials: true });
+      const data = {
+        url: this.urlInput?.value,
+        start: this.enableStart?.checked ? this.startInput?.value : undefined,
+        end: this.enableEnd?.checked ? this.endInput?.value : undefined,
+      };
+      const response = await axios.post(url, data, { withCredentials: true });
       if (response.status === 201) {
         this.close();
       } else {
@@ -268,7 +306,7 @@ class AddVideoModalViewModel {
       }
     } finally {
       this.submittingForm = false;
-      this.urlInput?.removeAttribute('disabled');
+      this.urlInput.disabled = false;
     }
   };
 
@@ -315,11 +353,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       playButton.setAttribute('hidden', 'true');
 
+      const onReady = () => {
+        syncVideo();
+        setInterval(syncVideo, 1000);
+      };
+
       const onStateChange = ({ data }: { data: number }) => {
         switch (data) {
-          case window.YT.PlayerState.ENDED:
-            return setTimeout(syncVideo, 1000);
-
           case window.YT.PlayerState.PLAYING:
             return syncVideoTime();
         }
@@ -342,8 +382,8 @@ document.addEventListener('DOMContentLoaded', () => {
           showinfo: 0,
         },
         events: {
-          onReady: syncVideo,
-          onStateChange: onStateChange,
+          onReady,
+          onStateChange,
         },
       });
     });

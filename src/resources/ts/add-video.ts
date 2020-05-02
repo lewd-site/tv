@@ -73,12 +73,19 @@ class Api {
 const youTubeRegExp = /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw]).*$/;
 
 class AddVideoViewModel {
+  private readonly enableStart: HTMLInputElement | null;
+  private readonly enableEnd: HTMLInputElement | null;
+
+  private readonly start: HTMLInputElement | null;
+  private readonly end: HTMLInputElement | null;
+
   private readonly placeholder: HTMLElement | null;
   private readonly error: HTMLElement | null;
   private readonly info: HTMLElement | null;
   private readonly infoThumbnail: HTMLImageElement | null;
   private readonly infoTitle: HTMLElement | null;
   private readonly infoAuthor: HTMLAnchorElement | null;
+
   private readonly fields: { [key: string]: Field };
   private readonly state = new Observable<State>({ type: 'placeholder' });
 
@@ -87,6 +94,12 @@ class AddVideoViewModel {
     if (!form) {
       throw new Error('Add video form not found');
     }
+
+    this.enableStart = form.querySelector('.add-video__enable-start > input');
+    this.enableEnd = form.querySelector('.add-video__enable-end > input');
+
+    this.start = form.querySelector('.add-video__start');
+    this.end = form.querySelector('.add-video__end');
 
     this.placeholder = form.querySelector('.add-video__placeholder');
     this.error = form.querySelector('.add-video__error');
@@ -101,6 +114,12 @@ class AddVideoViewModel {
 
     this.state.subscribe(this.onStateChange);
 
+    this.enableStart?.addEventListener('input', this.onEnableStartChange);
+    this.enableEnd?.addEventListener('input', this.onEnableEndChange);
+
+    this.onEnableStartChange();
+    this.onEnableEndChange();
+
     const urlInput = this.fields['url'].element;
     urlInput.addEventListener('input', this.onUrlChange);
 
@@ -110,12 +129,45 @@ class AddVideoViewModel {
 
     eventBus.subscribe('addVideoModalOpened', () => {
       this.onUrlChange();
+      this.onEnableStartChange();
+      this.onEnableEndChange();
     });
 
     eventBus.subscribe('addVideoModalClosed', () => {
       this.fields['url'].element.value = '';
+
+      if (this.enableStart) {
+        this.enableStart.checked = false;
+      }
+
+      if (this.enableEnd) {
+        this.enableEnd.checked = false;
+      }
+
       this.state.set({ type: 'placeholder' });
     });
+  }
+
+  private onEnableStartChange = () => {
+    if (!this.start) {
+      return;
+    }
+
+    this.start.disabled = !this.enableStart?.checked || false;
+    if (this.start.disabled) {
+      this.start.value = '0:00';
+    }
+  }
+
+  private onEnableEndChange = () => {
+    if (!this.end) {
+      return;
+    }
+
+    this.end.disabled = !this.enableEnd?.checked || false;
+    if (this.end.disabled) {
+      this.end.value = '0:00';
+    }
   }
 
   private onStateChange = (state: State) => {

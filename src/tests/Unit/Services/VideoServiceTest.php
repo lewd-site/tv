@@ -41,7 +41,7 @@ class VideoServiceTest extends TestCase
 
     /** @var VideoService */
     $service = app()->make(VideoService::class);
-    $video = $service->create($room, $user, $url);
+    $video = $service->create($room, $user, $url, null, null);
 
     $this->assertEquals($url, $video->url);
     $this->assertEquals($type, $video->type);
@@ -77,7 +77,7 @@ class VideoServiceTest extends TestCase
 
     /** @var VideoService */
     $service = app()->make(VideoService::class);
-    $service->create($room, $user, $url);
+    $service->create($room, $user, $url, null, null);
   }
 
   public function test_delete(): void

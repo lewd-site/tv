@@ -11,6 +11,26 @@
       'attributes' => 'required pattern="^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw]).*$" maxlength="2048"'
       ])
     </div>
+
+    <div class="add-video__time">
+      <label class="add-video__enable-start checkbox">
+        <input type="checkbox" hidden />
+        <span class="checkbox-icon"></span>
+
+        <span>Начало видео</span>
+      </label>
+
+      <input type="text" class="add-video__start input" name="start" value="0:00" pattern="^(?:(?:\d+:)?[0-5]?\d:)?[0-5]?\d$" maxlength="10" />
+
+      <label class="add-video__enable-end checkbox">
+        <input type="checkbox" hidden />
+        <span class="checkbox-icon"></span>
+
+        <span>Конец видео</span>
+      </label>
+
+      <input type="text" class="add-video__end input" name="end" value="0:00" pattern="^(?:(?:\d+:)?[0-5]?\d:)?[0-5]?\d$" maxlength="10" />
+    </div>
   </div>
 
   <div class="add-video__main">

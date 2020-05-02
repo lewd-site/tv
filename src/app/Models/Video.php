@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
  * @property string $title
  * @property Carbon $start_at
  * @property Carbon $end_at
+ * @property int $offset
  * @property int $user_id
  * @property int $room_id
  * @property User $user
@@ -32,6 +33,7 @@ class Video extends Model
     'title',
     'start_at',
     'end_at',
+    'offset',
     'user_id',
     'room_id',
   ];
@@ -60,6 +62,7 @@ class Video extends Model
       'title'   => $this->title,
       'startAt' => $this->start_at->toIso8601String(),
       'endAt'   => $this->end_at->toIso8601String(),
+      'offset'  => $this->offset,
       'userId'  => $this->user_id,
       'roomId'  => $this->room_id,
     ];

@@ -10,6 +10,7 @@ use App\Models\Room;
 use App\Models\Video;
 use App\Services\RoomService;
 use App\Services\VideoService;
+use Exception;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -78,13 +79,33 @@ class RoomController extends Controller
     return view('rooms.pages.add-video', ['room' => $room]);
   }
 
+  private function timeToDuration(string $time): int
+  {
+    $parts = explode(':', $time);
+    switch (count($parts)) {
+      case 1:
+        return (int) $parts[0];
+
+      case 2:
+        return 60 * (int) $parts[0] + (int) $parts[1];
+
+      case 3:
+        return 3600 * (int) $parts[0] + 60 * (int) $parts[1] + (int) $parts[2];
+
+      default:
+        throw new BadRequestHttpException('Invalid time format');
+    }
+  }
+
   public function addVideoSubmit(CreateVideoRequest $request, Room $room)
   {
     $user = auth()->user();
     $input = $request->validated();
     try {
-      $this->videoService->create($room, $user, $input['url']);
-    } catch (NotFoundHttpException $e) {
+      $start = isset($input['start']) ? $this->timeToDuration($input['start']) : null;
+      $end = isset($input['end']) ? $this->timeToDuration($input['end']) : null;
+      $this->videoService->create($room, $user, $input['url'], $start, $end);
+    } catch (BadRequestHttpException | NotFoundHttpException $e) {
       return redirect()->back()->withInput()->withErrors(['url' => $e->getMessage()]);
     }
 
@@ -96,8 +117,10 @@ class RoomController extends Controller
     $user = auth()->user();
     $input = $request->validated();
     try {
-      $video = $this->videoService->create($room, $user, $input['url']);
-    } catch (NotFoundHttpException $e) {
+      $start = isset($input['start']) ? $this->timeToDuration($input['start']) : null;
+      $end = isset($input['end']) ? $this->timeToDuration($input['end']) : null;
+      $video = $this->videoService->create($room, $user, $input['url'], $start, $end);
+    } catch (BadRequestHttpException | NotFoundHttpException $e) {
       return response()->json(['error' => $e->getMessage()], 400);
     }
 

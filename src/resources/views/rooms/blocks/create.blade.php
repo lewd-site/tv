@@ -32,7 +32,7 @@
       'name' => 'url',
       'label' => 'URL',
       'value' => old('url'),
-      'attributes' => 'required pattern="[A-Za-z0-9_-]+" maxlength="255"'
+      'attributes' => 'required pattern="^[A-Za-z0-9_-]+$" maxlength="255"'
       ])
     </div>
   </section>

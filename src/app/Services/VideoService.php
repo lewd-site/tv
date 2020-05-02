@@ -50,11 +50,24 @@ class VideoService
   }
 
   /**
+   * @throws BadRequestHttpException
    * @throws NotFoundHttpException
    */
-  public function create(Room $room, User $user, string $url): Video
+  public function create(Room $room, User $user, string $url, ?int $start, ?int $end): Video
   {
     $data = $this->getVideoInfo($url);
+
+    if (isset($end)) {
+      $data['duration'] = $end;
+    }
+
+    if (isset($start)) {
+      $data['duration'] -= $start;
+    }
+
+    if ($data['duration'] < 0) {
+      throw new BadRequestHttpException("Video duration can't be negative");
+    }
 
     /** @var ?string */
     $playlistEndAt = Video::where('room_id', $room->id)
@@ -72,6 +85,7 @@ class VideoService
       'title'    => $data['title'],
       'start_at' => $startAt,
       'end_at'   => $endAt,
+      'offset'   => $start ?? 0,
       'room_id'  => $room->id,
       'user_id'  => $user->id,
     ]);
