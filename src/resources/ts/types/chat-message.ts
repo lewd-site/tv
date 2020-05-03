@@ -9,4 +9,6 @@ export interface ChatMessage {
 
   readonly roomId: number;
   readonly roomName: string;
+
+  readonly createdAt: string;
 }

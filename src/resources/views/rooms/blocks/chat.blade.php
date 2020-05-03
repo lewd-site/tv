@@ -10,7 +10,23 @@
   @spaceless
   <div class="chat__main">
     <ul class="chat__list">
-      @foreach ($messages as $message)
+      @php
+      $today = now()->format('Y-m-d');
+      $yesterday = now()->subDay()->format('Y-m-d');
+      @endphp
+      @foreach ($messages->groupBy(fn ($message) => $message->created_at->format('Y-m-d')) as $date => $dateMessages)
+      <li class="chat__date-separator">
+        @if ($date === $today)
+        Сегодня
+        @elseif ($date === $yesterday)
+        Вчера
+        @else
+        {{ (new Carbon($date))->format('j F') }}
+        @endif
+      </li>
+      @endspaceless
+      @spaceless
+      @foreach ($dateMessages as $message)
       <li class="chat__item">
         <div class="chat__avatar">
           <img class="chat__avatar-image" src="https://www.gravatar.com/avatar/{{ md5(strtolower($message->user->email)) }}.jpg?s=24&d=mp" data-draggable="false" />
@@ -23,7 +39,16 @@
           @spaceless
           <span class="chat__message-text">{{ $message->message }}</span>
         </div>
+        @endspaceless
+        @spaceless
+        <div class="chat__message-right">
+          <button type="button" class="chat__message-mention">@</button>
+          @endspaceless
+          @spaceless
+          <time class="chat__message-time" datetime="{{ $message->created_at->format('c') }}">{{ $message->created_at->format('H:i') }}</time>
+        </div>
       </li>
+      @endforeach
       @endforeach
     </ul>
   </div>
