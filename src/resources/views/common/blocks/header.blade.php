@@ -1,14 +1,14 @@
 <nav class="header__inner">
   <div class="header__left">
-    <a class="header__logo" href="{{ route('common.landing') }}" data-draggable="false">
-      <img class="header__logo-image" src="/images/logo-full.svg" />
+    <a class="header__logo" href="{{ route('common.landing') }}">
+      <img class="header__logo-image" src="/images/logo-full.svg" data-draggable="false" />
     </a>
   </div>
 
   <div class="header__center">
-    <a class="header__link" href="{{ route('rooms.list') }}" data-draggable="false">Комнаты</a>
-    <a class="header__link" href="{{ route('common.about') }}" data-draggable="false">О сайте</a>
-    <a class="header__link" href="{{ route('common.contact') }}" data-draggable="false">Контакты</a>
+    <a class="header__link" href="{{ route('rooms.list') }}">Комнаты</a>
+    <a class="header__link" href="{{ route('common.about') }}">О сайте</a>
+    <a class="header__link" href="{{ route('common.contact') }}">Контакты</a>
   </div>
 
   <div class="header__right">

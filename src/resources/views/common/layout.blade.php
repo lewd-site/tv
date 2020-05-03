@@ -1,7 +1,7 @@
 @prepend('styles')
 <link rel="stylesheet" href="/css/app.css" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700&display=swap&subset=cyrillic" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400&display=swap" />
 @endprepend
 
 @prepend('scripts')

@@ -46,6 +46,15 @@ button {
   background: none;
   color: inherit;
   font-family: inherit;
+
+  &:active,
+  &:focus {
+    outline: none !important;
+  }
+
+  &::-moz-focus-inner {
+    border: 0;
+  }
 }
 
 ul, ol {

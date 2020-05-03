@@ -14,7 +14,6 @@ declare global {
 
     readonly YT?: any;
     onYouTubeIframeAPIReady?: () => void;
-    player?: any;
   }
 }
 
@@ -27,87 +26,22 @@ interface PresenceChannelUser {
   readonly name: string;
 }
 
+interface YouTubeSubtitleTrack {
+  readonly displayName: string;
+  readonly id: null;
+  readonly is_default: boolean;
+  readonly is_servable: boolean;
+  readonly is_translateable: boolean;
+  readonly kind: string;
+  readonly languageCode: string;
+  readonly languageName: string;
+  readonly name: null;
+  readonly vss_id: string;
+}
+
 const CHAT_MESSAGES = 100;
 
 const youTubeRegExp = /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw]).*$/;
-
-let serverTimeOffset: null | number = null;
-const now = async () => {
-  if (serverTimeOffset !== null) {
-    return new Date().getTime() + serverTimeOffset;
-  } else {
-    try {
-      const timeBefore = new Date().getTime();
-      const serverTime = new Date((await axios.get<TimeResponse>('/api/time')).data.time).getTime();
-      const timeAfter = new Date().getTime();
-      const localTime = (timeBefore + timeAfter) / 2;
-      serverTimeOffset = serverTime - localTime;
-
-      return new Date().getTime() + serverTimeOffset;
-    } catch {
-      return new Date().getTime();
-    }
-  }
-};
-
-const syncVideo = async () => {
-  if (!window.model || !window.player) {
-    return;
-  }
-
-  const video = await window.model.getCurrentVideo();
-  if (!video) {
-    window.player.pauseVideo();
-    return;
-  }
-
-  const match = video.url.match(youTubeRegExp);
-  if (!match) {
-    return;
-  }
-
-  const videoId = match[1];
-  const currentVideoUrl = window.player.getVideoUrl();
-  if (!currentVideoUrl) {
-    window.player.loadVideoById({ videoId });
-    window.player.playVideo();
-    setTimeout(syncVideoTime, 1000);
-    return;
-  }
-
-  const currentVideoMatch = currentVideoUrl.match(youTubeRegExp);
-  if (!currentVideoMatch) {
-    window.player.loadVideoById({ videoId });
-    window.player.playVideo();
-    setTimeout(syncVideoTime, 1000);
-    return;
-  }
-
-  const currentVideoId = currentVideoMatch[1];
-  if (currentVideoId !== videoId) {
-    window.player.loadVideoById({ videoId });
-    window.player.playVideo();
-    setTimeout(syncVideoTime, 1000);
-  }
-};
-
-const syncVideoTime = async () => {
-  if (!window.model || !window.player) {
-    return;
-  }
-
-  const video = await window.model.getCurrentVideo();
-  if (!video) {
-    return;
-  }
-
-  const timeNow = await now();
-  const playerTime = window.player.getCurrentTime();
-  const time = (timeNow - new Date(video.startAt).getTime()) / 1000 + video.offset;
-  if (Math.abs(playerTime - time) > 1.0) {
-    window.player.seekTo(time, true);
-  }
-};
 
 class RoomModel {
   public readonly users = new Observable<PresenceChannelUser[]>([]);
@@ -115,6 +49,8 @@ class RoomModel {
   public readonly messages = new Observable<ChatMessage[]>([]);
 
   public readonly currentVideo = new Observable<null | Video>(null);
+
+  private serverTimeOffset: null | number = null;
 
   public constructor() {
     if (!window.Echo) {
@@ -130,11 +66,11 @@ class RoomModel {
     window.Echo.channel(`rooms.${window.room.id}`)
       .listen('VideoCreatedEvent', (video: Video) => {
         this.videos.set([...this.videos.get(), video]);
-        syncVideo();
+        eventBus.emit('videoCreated', video);
       })
       .listen('VideoDeletedEvent', ({ id }: { id: number }) => {
         this.videos.set(this.videos.get().filter(v => v.id !== id));
-        syncVideo();
+        eventBus.emit('videoDeleted', id);
       })
       .listen('ChatMessageCreatedEvent', (message: ChatMessage) => {
         const messages = [...this.messages.get(), message];
@@ -143,6 +79,7 @@ class RoomModel {
         }
 
         this.messages.set(messages);
+        eventBus.emit('chatMessageCreated', message);
       });
 
     window.Echo.join(`rooms.${window.room.id}`)
@@ -157,8 +94,26 @@ class RoomModel {
       });
   }
 
+  public now = async () => {
+    if (this.serverTimeOffset !== null) {
+      return new Date().getTime() + this.serverTimeOffset;
+    } else {
+      try {
+        const timeBefore = new Date().getTime();
+        const serverTime = new Date((await axios.get<TimeResponse>('/api/time')).data.time).getTime();
+        const timeAfter = new Date().getTime();
+        const localTime = (timeBefore + timeAfter) / 2;
+        this.serverTimeOffset = serverTime - localTime;
+
+        return new Date().getTime() + this.serverTimeOffset;
+      } catch {
+        return new Date().getTime();
+      }
+    }
+  };
+
   public async getCurrentVideo(): Promise<null | Video> {
-    const timeNow = await now();
+    const timeNow = await this.now();
 
     const videos = this.videos.get();
     const video = videos.find(video => {
@@ -317,81 +272,729 @@ class AddVideoModalViewModel {
   };
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const model = new RoomModel();
-  model.videos.set(window.videos || []);
-  model.messages.set(window.messages || []);
-  window.model = model;
+class PlayerViewModel {
+  private readonly playerWrapper: HTMLElement | null;
+  private readonly playButton: HTMLElement | null;
+  private readonly controls: HTMLElement | null;
+  private readonly controlsPlay: HTMLElement | null;
+  private readonly controlsMute: HTMLElement | null;
+  private readonly controlsVolume: HTMLElement | null;
+  private readonly controlsVolumeFill: HTMLElement | null;
+  private readonly controlsVolumeHandle: HTMLElement | null;
+  private readonly controlsCurrentTime: HTMLElement | null;
+  private readonly controlsDuration: HTMLElement | null;
+  private readonly controlsSync: HTMLElement | null;
+  private readonly controlsSub: HTMLElement | null;
+  private readonly controlsFullscreen: HTMLElement | null;
+  private readonly controlsSeek: HTMLElement | null;
+  private readonly controlsSeekBuffered: HTMLElement | null;
+  private readonly controlsSeekFill: HTMLElement | null;
+  private readonly controlsSeekHandle: HTMLElement | null;
 
-  window.onYouTubeIframeAPIReady = () => {
-    const playButton = document.querySelector<HTMLButtonElement>('.room-video__play');
-    if (playButton) {
-      playButton.removeAttribute('hidden');
-    } else {
-      console.warn('.room-video__play not found');
+  private player: any = null;
+
+  private isPlaying = new Observable(false);
+  private isMute = new Observable(false);
+  private volume = new Observable(50);
+  private currentTime = new Observable(0);
+  private duration = new Observable(0);
+  private buffered = new Observable(0);
+  private isSyncEnabled = new Observable(false);
+  private isSubEnabled = new Observable(false);
+  private subtitleTracks = new Observable<YouTubeSubtitleTrack[]>([]);
+  private subtitleTrack = new Observable<YouTubeSubtitleTrack | null>(null);
+  private isFullscreen = new Observable(false);
+  private lastVolume = 50;
+  private isSeeking = false;
+  private lastPlaying = false;
+
+  public constructor(private readonly room: RoomModel) {
+    this.playerWrapper = document.getElementById('player');
+    if (!this.playerWrapper) {
+      throw new Error('Player wrapper not found');
+    }
+
+    this.playButton = document.getElementById('play');
+    if (!this.playButton) {
+      throw new Error('Play button not found');
+    }
+
+    this.controls = document.getElementById('controls');
+    if (!this.controls) {
+      throw new Error('Controls not found');
+    }
+
+    this.controlsPlay = document.getElementById('controls-play');
+    if (!this.controlsPlay) {
+      throw new Error('Controls play button not found');
+    }
+
+    this.controlsMute = document.getElementById('controls-mute');
+    if (!this.controlsMute) {
+      throw new Error('Controls mute button not found');
+    }
+
+    this.controlsVolume = document.getElementById('controls-volume');
+    if (!this.controlsVolume) {
+      throw new Error('Controls volume not found');
+    }
+
+    this.controlsVolumeFill = document.getElementById('controls-volume-fill');
+    if (!this.controlsVolumeFill) {
+      throw new Error('Controls volume fill not found');
+    }
+
+    this.controlsVolumeHandle = document.getElementById('controls-volume-handle');
+    if (!this.controlsVolumeHandle) {
+      throw new Error('Controls volume handle not found');
+    }
+
+    this.controlsCurrentTime = document.getElementById('controls-current-time');
+    if (!this.controlsCurrentTime) {
+      throw new Error('Controls current time not found');
+    }
+
+    this.controlsDuration = document.getElementById('controls-duration');
+    if (!this.controlsDuration) {
+      throw new Error('Controls duration not found');
+    }
+
+    this.controlsSync = document.getElementById('controls-sync');
+    if (!this.controlsSync) {
+      throw new Error('Controls duration not found');
+    }
+
+    this.controlsSub = document.getElementById('controls-sub');
+    if (!this.controlsSub) {
+      throw new Error('Controls sub not found');
+    }
+
+    this.controlsFullscreen = document.getElementById('controls-fullscreen');
+    if (!this.controlsFullscreen) {
+      throw new Error('Controls fullscreen not found');
+    }
+
+    this.controlsSeek = document.getElementById('seek');
+    if (!this.controlsSeek) {
+      throw new Error('Seek not found');
+    }
+
+    this.controlsSeekBuffered = document.getElementById('seek-buffered');
+    if (!this.controlsSeekBuffered) {
+      throw new Error('Seek buffered not found');
+    }
+
+    this.controlsSeekFill = document.getElementById('seek-fill');
+    if (!this.controlsSeekFill) {
+      throw new Error('Seek fill not found');
+    }
+
+    this.controlsSeekHandle = document.getElementById('seek-handle');
+    if (!this.controlsSeekHandle) {
+      throw new Error('Seek handle not found');
+    }
+
+    this.isPlaying.subscribe(isPlaying => {
+      if (!this.controlsPlay) {
+        return;
+      }
+
+      if (isPlaying) {
+        this.controlsPlay.classList.remove('room-video__controls-play');
+        this.controlsPlay.classList.add('room-video__controls-pause');
+      } else {
+        this.controlsPlay.classList.add('room-video__controls-play');
+        this.controlsPlay.classList.remove('room-video__controls-pause');
+      }
+    });
+
+    this.volume.subscribe(volume => {
+      if (!this.controlsVolumeFill || !this.controlsVolumeHandle) {
+        return;
+      }
+
+      this.controlsVolumeFill.style.width = `${volume}%`;
+      this.controlsVolumeHandle.style.left = `${volume}%`;
+    });
+
+    this.currentTime.subscribe(currentTime => {
+      if (this.controlsCurrentTime) {
+        this.controlsCurrentTime.textContent = this.formatTime(currentTime);
+      }
+
+      const duration = this.duration.get();
+      if (!this.isSeeking && duration > 0) {
+        if (this.controlsSeekFill) {
+          this.controlsSeekFill.style.width = `${currentTime * 100 / duration}%`;
+        }
+
+        if (this.controlsSeekHandle) {
+          this.controlsSeekHandle.style.left = `${currentTime * 100 / duration}%`;
+        }
+      }
+    });
+
+    this.duration.subscribe(duration => {
+      if (this.controlsDuration) {
+        this.controlsDuration.textContent = this.formatTime(duration);
+      }
+
+      const currentTime = this.currentTime.get();
+      if (!this.isSeeking && duration > 0) {
+        if (this.controlsSeekFill) {
+          this.controlsSeekFill.style.width = `${currentTime * 100 / duration}%`;
+        }
+
+        if (this.controlsSeekHandle) {
+          this.controlsSeekHandle.style.left = `${currentTime * 100 / duration}%`;
+        }
+      }
+    });
+
+    this.buffered.subscribe(buffered => {
+      if (this.controlsSeekBuffered) {
+        this.controlsSeekBuffered.style.width = `${buffered}%`;
+      }
+    });
+
+    this.isSyncEnabled.subscribe(isSyncEnabled => {
+      if (!this.controlsSync) {
+        return;
+      }
+
+      if (isSyncEnabled) {
+        this.controlsSync.classList.remove('room-video__controls-sync-off');
+        this.controlsSync.classList.add('room-video__controls-sync-on');
+      } else {
+        this.controlsSync.classList.add('room-video__controls-sync-off');
+        this.controlsSync.classList.remove('room-video__controls-sync-on');
+      }
+    });
+
+    this.isSubEnabled.subscribe(isSubEnabled => {
+      if (this.player) {
+        if (isSubEnabled) {
+          this.player.loadModule('captions');
+          this.player.loadModule('cc');
+        } else {
+          this.player.unloadModule('captions');
+          this.player.unloadModule('cc');
+        }
+      }
+
+      if (this.controlsSub) {
+        if (isSubEnabled) {
+          this.controlsSub.classList.remove('room-video__controls-sub-off');
+          this.controlsSub.classList.add('room-video__controls-sub-on');
+        } else {
+          this.controlsSub.classList.add('room-video__controls-sub-off');
+          this.controlsSub.classList.remove('room-video__controls-sub-on');
+        }
+      }
+    });
+
+    this.isFullscreen.subscribe(isFullscreen => {
+      if (!this.controlsFullscreen) {
+        return;
+      }
+
+      if (isFullscreen) {
+        this.playerWrapper?.requestFullscreen();
+
+        this.playerWrapper?.classList.add('fullscreen');
+
+        this.controlsFullscreen.classList.remove('room-video__controls-fullscreen-off');
+        this.controlsFullscreen.classList.add('room-video__controls-fullscreen-on');
+      } else {
+        document.exitFullscreen();
+
+        this.playerWrapper?.classList.remove('fullscreen');
+
+        this.controlsFullscreen.classList.add('room-video__controls-fullscreen-off');
+        this.controlsFullscreen.classList.remove('room-video__controls-fullscreen-on');
+      }
+    });
+
+    this.playButton.addEventListener('click', this.onPlayButtonClick);
+    this.controlsPlay.addEventListener('click', this.onControlsPlayClick);
+    this.controlsMute.addEventListener('click', this.onControlsMuteClick);
+    this.controlsVolume.addEventListener('mousedown', this.onControlsVolumeMouseDown);
+    this.controlsSync.addEventListener('click', this.onControlsSyncClick);
+    this.controlsSub.addEventListener('click', this.onControlsSubClick);
+    this.controlsFullscreen.addEventListener('click', this.onControlsFullscreenClick);
+    this.controlsSeek.addEventListener('mousedown', this.onControlsSeekMouseDown);
+
+    document.addEventListener('fullscreenchange', () => {
+      this.isFullscreen.set(!!document.fullscreenElement);
+    });
+
+    eventBus.subscribe('videoCreated', this.syncVideo);
+    eventBus.subscribe('videoDeleted', this.syncVideo);
+
+    const volume = localStorage.getItem('player.volume');
+    if (typeof volume === 'string' && volume.length) {
+      this.volume.set(+volume);
+      this.isMute.set(Math.round(+volume) === 0);
+
+      if (+volume > 0) {
+        this.lastVolume = +volume;
+      }
+    }
+
+    setInterval(this.onUpdate, 500);
+  }
+
+  private syncVideo = async () => {
+    if (!this.player || !this.player.getVideoUrl) {
+      return;
+    }
+
+    const video = await this.room.getCurrentVideo();
+    if (!video) {
+      if (this.player.pauseVideo) {
+        this.player.pauseVideo();
+      }
+
+      return;
+    }
+
+    const match = video.url.match(youTubeRegExp);
+    if (!match) {
+      return;
+    }
+
+    const videoId = match[1];
+    const currentVideoUrl = this.player.getVideoUrl();
+    if (!currentVideoUrl) {
+      this.player.loadVideoById({ videoId });
+
+      if (this.volume.get() > 0) {
+        this.player.unMute();
+        this.player.setVolume(this.volume.get());
+
+        this.isMute.set(false);
+      } else {
+        this.player.mute();
+        this.player.setVolume(1);
+
+        this.isMute.set(true);
+      }
+
+      this.player.playVideo();
+      setTimeout(this.syncVideoTime, 1000);
+      return;
+    }
+
+    const currentVideoMatch = currentVideoUrl.match(youTubeRegExp);
+    if (!currentVideoMatch) {
+      this.player.loadVideoById({ videoId });
+
+      if (this.volume.get() > 0) {
+        this.player.unMute();
+        this.player.setVolume(this.volume.get());
+
+        this.isMute.set(false);
+      } else {
+        this.player.mute();
+        this.player.setVolume(1);
+
+        this.isMute.set(true);
+      }
+
+      this.player.playVideo();
+      setTimeout(this.syncVideoTime, 1000);
+      return;
+    }
+
+    const currentVideoId = currentVideoMatch[1];
+    if (currentVideoId !== videoId) {
+      this.player.loadVideoById({ videoId });
+
+      if (this.volume.get() > 0) {
+        this.player.unMute();
+        this.player.setVolume(this.volume.get());
+
+        this.isMute.set(false);
+      } else {
+        this.player.mute();
+        this.player.setVolume(1);
+
+        this.isMute.set(true);
+      }
+
+      this.player.playVideo();
+      setTimeout(this.syncVideoTime, 1000);
     }
   };
 
-  const playlistViewModel = new Playlist({ propsData: { videos: model.videos } });
+  private syncVideoTime = async () => {
+    if (!this.player || !this.player.getCurrentTime) {
+      return;
+    }
+
+    const video = await this.room.getCurrentVideo();
+    if (!video) {
+      return;
+    }
+
+    const timeNow = await this.room.now();
+    const playerTime = this.player.getCurrentTime();
+    const time = (timeNow - new Date(video.startAt).getTime()) / 1000 + video.offset;
+    if (Math.abs(playerTime - time) > 2) {
+      this.player.seekTo(time, true);
+    }
+  };
+
+  private formatTime = (time: number): string => {
+    const s = Math.floor(time) % 60;
+    const m = Math.floor(time / 60) % 60;
+    const h = Math.floor(time / 3600);
+
+    const sStr = s.toFixed(0).padStart(2, '0');
+    if (h) {
+      const mStr = m.toFixed(0).padStart(2, '0');
+      const hStr = h.toFixed(0);
+
+      return `${hStr}:${mStr}:${sStr}`;
+    } else {
+      const mStr = m.toFixed(0);
+
+      return `${mStr}:${sStr}`;
+    }
+  };
+
+  private onUpdate = async () => {
+    if (this.isSyncEnabled.get()) {
+      await this.syncVideo();
+      await this.syncVideoTime();
+    }
+
+    if (!this.player || !this.player.getCurrentTime) {
+      return;
+    }
+
+    this.currentTime.set(this.player.getCurrentTime() || 0);
+    this.duration.set(this.player.getDuration() || 0);
+    this.buffered.set(this.player.getVideoLoadedFraction() * 100);
+  };
+
+  private initPlayer = () => {
+    if (this.player) {
+      return;
+    }
+
+    const onReady = () => {
+      this.controls?.removeAttribute('hidden');
+      this.isSyncEnabled.set(true);
+    };
+
+    const onApiChange = () => {
+      const isSubEnabled = this.isSubEnabled.get();
+      const options = this.player.getOptions() as string[];
+
+      if (options.indexOf('captions') !== -1) {
+        this.subtitleTracks.set(this.player.getOption('captions', 'tracklist'));
+
+        if (isSubEnabled) {
+          this.subtitleTrack.set(this.player.getOption('captions', 'track'));
+          this.player.loadModule('captions');
+        } else {
+          this.subtitleTrack.set(null);
+          this.player.unloadModule('captions');
+        }
+      }
+
+      if (options.indexOf('cc') !== -1) {
+        this.subtitleTracks.set(this.player.getOption('cc', 'tracklist'));
+
+        if (isSubEnabled) {
+          this.subtitleTrack.set(this.player.getOption('cc', 'track'));
+          this.player.loadModule('cc');
+        } else {
+          this.subtitleTrack.set(null);
+          this.player.unloadModule('cc');
+        }
+      }
+    };
+
+    const onStateChange = ({ data }: { data: number }) => {
+      switch (data) {
+        case window.YT.PlayerState.PAUSED:
+        case window.YT.PlayerState.ENDED:
+          this.isPlaying.set(false);
+          break;
+
+        case window.YT.PlayerState.BUFFERING:
+        case window.YT.PlayerState.PLAYING:
+          this.isPlaying.set(true);
+          break;
+      }
+    };
+
+    this.player = new window.YT.Player('video', {
+      host: `${window.location.protocol}//www.youtube.com`,
+      origin: window.location.origin,
+      videoId: null,
+      playerVars: {
+        autoplay: 1,
+        autohide: 1,
+        cc_load_policy: 0,
+        controls: 0,
+        disablekb: 1,
+        fs: 0,
+        iv_load_policy: 3,
+        modestbranding: 1,
+        playsinline: 1,
+        rel: 0,
+        showinfo: 0,
+      },
+      events: {
+        onReady,
+        onApiChange,
+        onStateChange,
+      },
+    });
+  };
+
+  private onPlayButtonClick = (e: Event) => {
+    e.preventDefault();
+    this.playButton?.setAttribute('hidden', 'true');
+    this.initPlayer();
+  };
+
+  private onControlsPlayClick = (e: Event) => {
+    e.preventDefault();
+
+    this.isSyncEnabled.set(false);
+
+    if (!this.player) {
+      return;
+    }
+
+    if (this.isPlaying.get()) {
+      this.player.pauseVideo();
+    } else {
+      this.player.playVideo();
+    }
+  };
+
+  private onControlsMuteClick = (e: Event) => {
+    e.preventDefault();
+
+    if (this.volume.get() > 0) {
+      this.lastVolume = this.volume.get();
+
+      this.player.mute();
+      this.player.setVolume(1);
+
+      this.isMute.set(true);
+      this.volume.set(0);
+    } else {
+      this.player.unMute();
+      this.player.setVolume(this.lastVolume);
+
+      this.isMute.set(false);
+      this.volume.set(this.lastVolume);
+    }
+  };
+
+  private onControlsVolumeMouseDown = (e: MouseEvent) => {
+    if (!this.controlsVolume || !this.player && !this.player.setVolume) {
+      return;
+    }
+
+    const { left, width } = this.controlsVolume.getBoundingClientRect();
+    const volume = Math.min(Math.max(0, Math.round((e.clientX - left) * 100 / width)), 100);
+    if (volume > 0) {
+      this.player.unMute();
+      this.player.setVolume(volume);
+
+      this.isMute.set(false);
+      this.volume.set(volume);
+    } else {
+      this.player.mute();
+      this.player.setVolume(1);
+
+      this.isMute.set(true);
+      this.volume.set(0);
+    }
+
+    localStorage.setItem('player.volume', volume.toString());
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!this.controlsVolume || !this.player && !this.player.setVolume) {
+        return;
+      }
+
+      const { left, width } = this.controlsVolume.getBoundingClientRect();
+      const volume = Math.min(Math.max(0, Math.round((e.clientX - left) * 100 / width)), 100);
+      if (volume > 0) {
+        this.player.unMute();
+        this.player.setVolume(volume);
+
+        this.isMute.set(false);
+        this.volume.set(volume);
+      } else {
+        this.player.mute();
+        this.player.setVolume(1);
+
+        this.isMute.set(true);
+        this.volume.set(0);
+      }
+
+      localStorage.setItem('player.volume', volume.toString());
+    };
+
+    const onMouseUp = (e: MouseEvent) => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+
+  private onControlsSyncClick = (e: Event) => {
+    e.preventDefault();
+
+    if (this.isSyncEnabled.get()) {
+      this.isSyncEnabled.set(false);
+    } else {
+      this.isSyncEnabled.set(true);
+
+      if (this.player && !this.isPlaying.get()) {
+        this.player.playVideo();
+      }
+    }
+  };
+
+  private onControlsSubClick = (e: Event) => {
+    e.preventDefault();
+
+    this.isSubEnabled.set(!this.isSubEnabled.get());
+  };
+
+  private onControlsFullscreenClick = (e: Event) => {
+    e.preventDefault();
+
+    if (this.isFullscreen.get()) {
+      this.isFullscreen.set(false);
+    } else {
+      this.isFullscreen.set(true);
+    }
+  };
+
+  private onControlsSeekMouseDown = (e: MouseEvent) => {
+    e.preventDefault();
+
+    if (!this.controlsSeek || !this.player && !this.player.seekTo) {
+      return;
+    }
+
+    this.isSyncEnabled.set(false);
+    this.isSeeking = true;
+    this.lastPlaying = this.isPlaying.get();
+
+    const duration = this.duration.get();
+    const { left, width } = this.controlsSeek.getBoundingClientRect();
+    const time = Math.round(Math.min(Math.max(0, Math.round((e.clientX - left) * duration / width)), duration));
+    const playerTime = this.player.getCurrentTime();
+    if (Math.abs(playerTime - time) > 2) {
+      this.player.seekTo(time, false);
+    }
+
+    if (this.controlsSeekFill) {
+      this.controlsSeekFill.style.width = `${time * 100 / duration}%`;
+    }
+
+    if (this.controlsSeekHandle) {
+      this.controlsSeekHandle.style.left = `${time * 100 / duration}%`;
+    }
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!this.controlsSeek || !this.player && !this.player.seekTo) {
+        return;
+      }
+
+      const duration = this.duration.get();
+      const { left, width } = this.controlsSeek.getBoundingClientRect();
+      const time = Math.round(Math.min(Math.max(0, Math.round((e.clientX - left) * duration / width)), duration));
+      const playerTime = this.player.getCurrentTime();
+      if (Math.abs(playerTime - time) > 2) {
+        this.player.seekTo(time, false);
+      }
+
+      if (this.controlsSeekFill) {
+        this.controlsSeekFill.style.width = `${time * 100 / duration}%`;
+      }
+
+      if (this.controlsSeekHandle) {
+        this.controlsSeekHandle.style.left = `${time * 100 / duration}%`;
+      }
+    };
+
+    const onMouseUp = (e: MouseEvent) => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+
+      if (!this.controlsSeek || !this.player && !this.player.seekTo) {
+        return;
+      }
+
+      const duration = this.duration.get();
+      const { left, width } = this.controlsSeek.getBoundingClientRect();
+      const time = Math.round(Math.min(Math.max(0, Math.round((e.clientX - left) * duration / width)), duration));
+      this.player.seekTo(time, true);
+
+      if (this.controlsSeekFill) {
+        this.controlsSeekFill.style.width = `${time * 100 / duration}%`;
+      }
+
+      if (this.controlsSeekHandle) {
+        this.controlsSeekHandle.style.left = `${time * 100 / duration}%`;
+      }
+
+      this.isSeeking = false;
+
+      if (this.lastPlaying) {
+        this.player.playVideo();
+      }
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const room = new RoomModel();
+  room.videos.set(window.videos || []);
+  room.messages.set(window.messages || []);
+  window.model = room;
+
+  window.onYouTubeIframeAPIReady = () => {
+    const playButton = document.getElementById('play');
+    if (!playButton) {
+      throw new Error('Play button not found');
+    }
+
+    playButton.removeAttribute('hidden');
+  };
+
+  const playlistViewModel = new Playlist({ propsData: { videos: room.videos } });
   playlistViewModel.$mount('.room-playlist__list', true);
 
-  const chatViewModel = new Chat({ propsData: { messages: model.messages } });
+  const chatViewModel = new Chat({ propsData: { messages: room.messages } });
   chatViewModel.$mount('.chat__main', true);
 
   const addVideoModalViewModel = new AddVideoModalViewModel();
-
-  // Handle play button.
-
-  const playButton = document.querySelector<HTMLButtonElement>('.room-video__play');
-  if (playButton) {
-    playButton.addEventListener('click', e => {
-      e.preventDefault();
-
-      playButton.setAttribute('hidden', 'true');
-
-      const onReady = () => {
-        syncVideo();
-        setInterval(syncVideo, 1000);
-      };
-
-      const onStateChange = ({ data }: { data: number }) => {
-        switch (data) {
-          case window.YT.PlayerState.PLAYING:
-            return syncVideoTime();
-        }
-      };
-
-      window.player = new window.YT.Player('player', {
-        host: `${window.location.protocol}//www.youtube.com`,
-        origin: window.location.origin,
-        videoId: null,
-        playerVars: {
-          autoplay: 1,
-          autohide: 1,
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          iv_load_policy: 3,
-          modestbranding: 1,
-          playsinline: 1,
-          rel: 0,
-          showinfo: 0,
-        },
-        events: {
-          onReady,
-          onStateChange,
-        },
-      });
-    });
-  } else {
-    console.warn('.room-video__play not found');
-  }
+  const playerViewModel = new PlayerViewModel(room);
 
   // Update video title.
 
   const videoTitle = document.querySelector<HTMLElement>('.room-video__title');
   if (videoTitle) {
-    model.currentVideo.subscribe(video => {
+    room.currentVideo.subscribe(video => {
       if (video?.endAt) {
         videoTitle.textContent = video.title;
       } else {
@@ -406,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const count = document.querySelector<HTMLElement>('.chat__count');
   if (count) {
-    model.users.subscribe(users => {
+    room.users.subscribe(users => {
       count.textContent = `${users.length} online`;
     });
   } else {
@@ -443,5 +1046,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  model.getCurrentVideo(); // Trigger update.
+  room.getCurrentVideo(); // Trigger update.
 });

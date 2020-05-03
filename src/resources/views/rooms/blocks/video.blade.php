@@ -1,10 +1,46 @@
 <div class="room-video__inner">
   <div class="room-video__main">
-    <div class="room-video__player">
-      <div class="room-video__video" id="player">
+    <div class="room-video__player" id="player">
+      <div class="room-video__video" id="video">
       </div>
 
-      <button class="room-video__play" hidden></button>
+      <div class="room-video__controls" id="controls" hidden>
+        <div class="room-video__controls-inner">
+          <div class="room-video__controls-left">
+            <button type="button" class="room-video__controls-play" id="controls-play"></button>
+            <button type="button" class="room-video__controls-mute" id="controls-mute"></button>
+
+            <div class="room-video__controls-volume" id="controls-volume" data-draggable="false">
+              <div class="room-video__controls-volume-fill" id="controls-volume-fill"></div>
+              <div class="room-video__controls-volume-handle" id="controls-volume-handle"></div>
+            </div>
+
+            <div class="room-video__controls-time">
+              @spaceless
+              <span class="room-video__controls-current-time" id="controls-current-time">0:00</span>
+              <span class="room-video__controls-duration" id="controls-duration">0:00</span>
+              @endspaceless
+            </div>
+
+            <div class="room-video__controls-sync-off" id="controls-sync"></div>
+          </div>
+
+          <div class="room-video__controls-right">
+            <button type="button" class="room-video__controls-sub-off" id="controls-sub"></button>
+            <button type="button" class="room-video__controls-options" id="controls-options"></button>
+            <button type="button" class="room-video__controls-cinema" id="controls-cinema"></button>
+            <button type="button" class="room-video__controls-fullscreen-off" id="controls-fullscreen"></button>
+          </div>
+
+          <div class="room-video__seek" id="seek" data-draggable="false">
+            <div class="room-video__seek-buffered" id="seek-buffered"></div>
+            <div class="room-video__seek-fill" id="seek-fill"></div>
+            <div class="room-video__seek-handle" id="seek-handle"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="room-video__play" id="play" hidden></button>
     </div>
 
     <h2 class="room-video__title"></h2>
