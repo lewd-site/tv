@@ -1,0 +1,66 @@
+.player-options {
+  &__title-text,
+  &__item-text {
+    position: relative;
+
+    border: 0;
+
+    color: #DFDFDF;
+
+    font-size: 12px;
+    font-weight: normal;
+
+    text-align: left;
+
+    width: 100%;
+
+    padding: 8px 16px;
+
+    outline: none;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+      background: #2E2E2E;
+    }
+  }
+
+  &__title-text {
+    &::after {
+      content: '';
+
+      position: absolute;
+      bottom: 0;
+      left: 16px;
+
+      display: block;
+
+      background: #414141;
+
+      width: calc(100% - 32px);
+      height: 1px;
+    }
+  }
+
+  &__item_checked &__item-text {
+    &::after {
+      content: '';
+
+      position: absolute;
+      top: 50%;
+      right: 16px;
+
+      transform: translate(0, -50%);
+
+      background: url('/images/check.svg');
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+
+      display: block;
+
+      width: 8px;
+      height: 7px;
+    }
+  }
+}

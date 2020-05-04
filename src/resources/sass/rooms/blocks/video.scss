@@ -353,6 +353,46 @@
     visibility: visible;
   }
 
+  &__player-options {
+    position: absolute;
+    bottom: 52px;
+    right: 10px;
+
+    width: 165px;
+
+    padding-bottom: 10px;
+
+    .player-options__list {
+      background: #252525;
+
+      border: 0;
+      border-radius: 5px;
+
+      box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+
+      width: 100%;
+      max-height: 203px;
+
+      overflow-y: auto;
+
+      scrollbar-color: #DFDFDF #2E2E2E;
+      scrollbar-width: thin;
+
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background-color: #2E2E2E;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        border-radius: 5px;
+        background-color: #DFDFDF;
+      }
+    }
+  }
+
   &__play {
     position: absolute;
 

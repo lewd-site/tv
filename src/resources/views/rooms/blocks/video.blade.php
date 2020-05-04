@@ -26,7 +26,7 @@
           </div>
 
           <div class="room-video__controls-right">
-            <button type="button" class="room-video__controls-sub-off" id="controls-sub"></button>
+            <button type="button" class="room-video__controls-sub-on" id="controls-sub"></button>
             <button type="button" class="room-video__controls-options" id="controls-options"></button>
             <button type="button" class="room-video__controls-cinema" id="controls-cinema"></button>
             <button type="button" class="room-video__controls-fullscreen-off" id="controls-fullscreen"></button>
@@ -36,6 +36,10 @@
             <div class="room-video__seek-buffered" id="seek-buffered"></div>
             <div class="room-video__seek-fill" id="seek-fill"></div>
             <div class="room-video__seek-handle" id="seek-handle"></div>
+          </div>
+
+          <div class="room-video__player-options player-options" id="player-options" hidden>
+            <div id="player-options-mount"></div>
           </div>
         </div>
       </div>

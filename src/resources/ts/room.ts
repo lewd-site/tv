@@ -1,5 +1,6 @@
 import axios from './axios';
 import Chat from './components/Chat.vue';
+import PlayerOptions from './components/PlayerOptions.vue';
 import Playlist from './components/Playlist.vue';
 import { Room, ChatMessage, Video } from './types';
 import { eventBus, Observable } from './utils';
@@ -272,8 +273,11 @@ class AddVideoModalViewModel {
   };
 }
 
+const TIME_EPS = 1;
+
 class PlayerViewModel {
   private readonly playerWrapper: HTMLElement | null;
+  private readonly playerOptions: HTMLElement | null;
   private readonly playButton: HTMLElement | null;
   private readonly controls: HTMLElement | null;
   private readonly controlsPlay: HTMLElement | null;
@@ -285,6 +289,8 @@ class PlayerViewModel {
   private readonly controlsDuration: HTMLElement | null;
   private readonly controlsSync: HTMLElement | null;
   private readonly controlsSub: HTMLElement | null;
+  private readonly controlsOptions: HTMLElement | null;
+  private readonly controlsCinema: HTMLElement | null;
   private readonly controlsFullscreen: HTMLElement | null;
   private readonly controlsSeek: HTMLElement | null;
   private readonly controlsSeekBuffered: HTMLElement | null;
@@ -300,9 +306,11 @@ class PlayerViewModel {
   private duration = new Observable(0);
   private buffered = new Observable(0);
   private isSyncEnabled = new Observable(false);
-  private isSubEnabled = new Observable(false);
+  private isSubEnabled = new Observable(true);
+  private showOptions = new Observable(false);
   private subtitleTracks = new Observable<YouTubeSubtitleTrack[]>([]);
   private subtitleTrack = new Observable<YouTubeSubtitleTrack | null>(null);
+  private lastSubtitleTrack: YouTubeSubtitleTrack | null = null;
   private isFullscreen = new Observable(false);
   private lastVolume = 50;
   private isSeeking = false;
@@ -313,6 +321,11 @@ class PlayerViewModel {
     if (!this.playerWrapper) {
       throw new Error('Player wrapper not found');
     }
+    this.playerOptions = document.getElementById('player-options');
+    if (!this.playerOptions) {
+      throw new Error('Player options not found');
+    }
+
 
     this.playButton = document.getElementById('play');
     if (!this.playButton) {
@@ -369,6 +382,16 @@ class PlayerViewModel {
       throw new Error('Controls sub not found');
     }
 
+    this.controlsOptions = document.getElementById('controls-options');
+    if (!this.controlsOptions) {
+      throw new Error('Controls options not found');
+    }
+
+    this.controlsCinema = document.getElementById('controls-cinema');
+    if (!this.controlsCinema) {
+      throw new Error('Controls cinema not found');
+    }
+
     this.controlsFullscreen = document.getElementById('controls-fullscreen');
     if (!this.controlsFullscreen) {
       throw new Error('Controls fullscreen not found');
@@ -417,12 +440,7 @@ class PlayerViewModel {
       this.controlsVolumeHandle.style.left = `${volume}%`;
     });
 
-    this.currentTime.subscribe(currentTime => {
-      if (this.controlsCurrentTime) {
-        this.controlsCurrentTime.textContent = this.formatTime(currentTime);
-      }
-
-      const duration = this.duration.get();
+    const seekTo = (currentTime: number, duration: number) => {
       if (!this.isSeeking && duration > 0) {
         if (this.controlsSeekFill) {
           this.controlsSeekFill.style.width = `${currentTime * 100 / duration}%`;
@@ -432,6 +450,15 @@ class PlayerViewModel {
           this.controlsSeekHandle.style.left = `${currentTime * 100 / duration}%`;
         }
       }
+    };
+
+    this.currentTime.subscribe(currentTime => {
+      if (this.controlsCurrentTime) {
+        this.controlsCurrentTime.textContent = this.formatTime(currentTime);
+      }
+
+      const duration = this.duration.get();
+      seekTo(currentTime, duration);
     });
 
     this.duration.subscribe(duration => {
@@ -440,15 +467,7 @@ class PlayerViewModel {
       }
 
       const currentTime = this.currentTime.get();
-      if (!this.isSeeking && duration > 0) {
-        if (this.controlsSeekFill) {
-          this.controlsSeekFill.style.width = `${currentTime * 100 / duration}%`;
-        }
-
-        if (this.controlsSeekHandle) {
-          this.controlsSeekHandle.style.left = `${currentTime * 100 / duration}%`;
-        }
-      }
+      seekTo(currentTime, duration);
     });
 
     this.buffered.subscribe(buffered => {
@@ -482,6 +501,26 @@ class PlayerViewModel {
         }
       }
 
+      if (isSubEnabled) {
+        if (this.lastSubtitleTrack !== null) {
+          this.subtitleTrack.set(this.lastSubtitleTrack);
+        } else {
+          const options = this.player.getOptions() as string[];
+
+          let track = null;
+          if (options.indexOf('captions') !== -1) {
+            track = this.player.getOption('captions', 'track');
+          } else if (options.indexOf('cc') !== -1) {
+            track = this.player.getOption('cc', 'track');
+          }
+
+          this.subtitleTrack.set(track);
+        }
+      } else {
+        this.lastSubtitleTrack = this.subtitleTrack.get();
+        this.subtitleTrack.set(null);
+      }
+
       if (this.controlsSub) {
         if (isSubEnabled) {
           this.controlsSub.classList.remove('room-video__controls-sub-off');
@@ -490,6 +529,14 @@ class PlayerViewModel {
           this.controlsSub.classList.add('room-video__controls-sub-off');
           this.controlsSub.classList.remove('room-video__controls-sub-on');
         }
+      }
+    });
+
+    this.showOptions.subscribe(showOptions => {
+      if (showOptions) {
+        this.playerOptions?.removeAttribute('hidden');
+      } else {
+        this.playerOptions?.setAttribute('hidden', 'true');
       }
     });
 
@@ -521,6 +568,8 @@ class PlayerViewModel {
     this.controlsVolume.addEventListener('mousedown', this.onControlsVolumeMouseDown);
     this.controlsSync.addEventListener('click', this.onControlsSyncClick);
     this.controlsSub.addEventListener('click', this.onControlsSubClick);
+    this.controlsOptions.addEventListener('click', this.onControlsOptionsClick);
+    this.controlsCinema.addEventListener('click', this.onControlsCinemaClick);
     this.controlsFullscreen.addEventListener('click', this.onControlsFullscreenClick);
     this.controlsSeek.addEventListener('mousedown', this.onControlsSeekMouseDown);
 
@@ -542,6 +591,30 @@ class PlayerViewModel {
     }
 
     setInterval(this.onUpdate, 500);
+
+    const playerOptionsViewModel = new PlayerOptions({
+      propsData: {
+        subtitleTracks: this.subtitleTracks,
+        subtitleTrack: this.subtitleTrack,
+      },
+    });
+
+    playerOptionsViewModel.$mount('#player-options-mount');
+    playerOptionsViewModel.$on('subtitleTrackChange', (track: YouTubeSubtitleTrack | null) => {
+      if (track !== null) {
+        this.isSubEnabled.set(true);
+
+        if (this.player) {
+          this.player.setOption('captions', 'track', { languageCode: track.languageCode });
+          this.player.setOption('cc', 'track', { languageCode: track.languageCode });
+        }
+      } else {
+        this.lastSubtitleTrack = this.subtitleTrack.get();
+        this.isSubEnabled.set(false);
+      }
+
+      this.subtitleTrack.set(track);
+    });
   }
 
   private syncVideo = async () => {
@@ -563,9 +636,7 @@ class PlayerViewModel {
       return;
     }
 
-    const videoId = match[1];
-    const currentVideoUrl = this.player.getVideoUrl();
-    if (!currentVideoUrl) {
+    const loadVideo = (videoId: string) => {
       this.player.loadVideoById({ videoId });
 
       if (this.volume.get() > 0) {
@@ -581,49 +652,22 @@ class PlayerViewModel {
       }
 
       this.player.playVideo();
-      setTimeout(this.syncVideoTime, 1000);
-      return;
+    };
+
+    const videoId = match[1];
+    const currentVideoUrl = this.player.getVideoUrl();
+    if (currentVideoUrl === 'https://www.youtube.com/watch') {
+      return loadVideo(videoId);
     }
 
     const currentVideoMatch = currentVideoUrl.match(youTubeRegExp);
     if (!currentVideoMatch) {
-      this.player.loadVideoById({ videoId });
-
-      if (this.volume.get() > 0) {
-        this.player.unMute();
-        this.player.setVolume(this.volume.get());
-
-        this.isMute.set(false);
-      } else {
-        this.player.mute();
-        this.player.setVolume(1);
-
-        this.isMute.set(true);
-      }
-
-      this.player.playVideo();
-      setTimeout(this.syncVideoTime, 1000);
-      return;
+      return loadVideo(videoId);
     }
 
     const currentVideoId = currentVideoMatch[1];
     if (currentVideoId !== videoId) {
-      this.player.loadVideoById({ videoId });
-
-      if (this.volume.get() > 0) {
-        this.player.unMute();
-        this.player.setVolume(this.volume.get());
-
-        this.isMute.set(false);
-      } else {
-        this.player.mute();
-        this.player.setVolume(1);
-
-        this.isMute.set(true);
-      }
-
-      this.player.playVideo();
-      setTimeout(this.syncVideoTime, 1000);
+      return loadVideo(videoId);
     }
   };
 
@@ -640,7 +684,7 @@ class PlayerViewModel {
     const timeNow = await this.room.now();
     const playerTime = this.player.getCurrentTime();
     const time = (timeNow - new Date(video.startAt).getTime()) / 1000 + video.offset;
-    if (Math.abs(playerTime - time) > 2) {
+    if (Math.abs(playerTime - time) > 1) {
       this.player.seekTo(time, true);
     }
   };
@@ -693,26 +737,26 @@ class PlayerViewModel {
       const options = this.player.getOptions() as string[];
 
       if (options.indexOf('captions') !== -1) {
-        this.subtitleTracks.set(this.player.getOption('captions', 'tracklist'));
+        const tracks = this.player.getOption('captions', 'tracklist');
+        this.subtitleTracks.set(tracks);
 
         if (isSubEnabled) {
-          this.subtitleTrack.set(this.player.getOption('captions', 'track'));
-          this.player.loadModule('captions');
+          const track = this.player.getOption('captions', 'track')
+          this.subtitleTrack.set(track);
         } else {
           this.subtitleTrack.set(null);
-          this.player.unloadModule('captions');
         }
       }
 
       if (options.indexOf('cc') !== -1) {
-        this.subtitleTracks.set(this.player.getOption('cc', 'tracklist'));
+        const tracks = this.player.getOption('cc', 'tracklist');
+        this.subtitleTracks.set(tracks);
 
         if (isSubEnabled) {
-          this.subtitleTrack.set(this.player.getOption('cc', 'track'));
-          this.player.loadModule('cc');
+          const track = this.player.getOption('cc', 'track')
+          this.subtitleTrack.set(track);
         } else {
           this.subtitleTrack.set(null);
-          this.player.unloadModule('cc');
         }
       }
     };
@@ -738,7 +782,7 @@ class PlayerViewModel {
       playerVars: {
         autoplay: 1,
         autohide: 1,
-        cc_load_policy: 0,
+        cc_load_policy: 1,
         controls: 0,
         disablekb: 1,
         fs: 0,
@@ -767,13 +811,13 @@ class PlayerViewModel {
 
     this.isSyncEnabled.set(false);
 
-    if (!this.player) {
+    if (!this.player || !this.player.playVideo) {
       return;
     }
 
     if (this.isPlaying.get()) {
       this.player.pauseVideo();
-    } else {
+    } else if (this.player.getVideoUrl() !== 'https://www.youtube.com/watch') {
       this.player.playVideo();
     }
   };
@@ -799,44 +843,26 @@ class PlayerViewModel {
   };
 
   private onControlsVolumeMouseDown = (e: MouseEvent) => {
-    if (!this.controlsVolume || !this.player && !this.player.setVolume) {
-      return;
-    }
-
-    const { left, width } = this.controlsVolume.getBoundingClientRect();
-    const volume = Math.min(Math.max(0, Math.round((e.clientX - left) * 100 / width)), 100);
-    if (volume > 0) {
-      this.player.unMute();
-      this.player.setVolume(volume);
-
-      this.isMute.set(false);
-      this.volume.set(volume);
-    } else {
-      this.player.mute();
-      this.player.setVolume(1);
-
-      this.isMute.set(true);
-      this.volume.set(0);
-    }
-
-    localStorage.setItem('player.volume', volume.toString());
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!this.controlsVolume || !this.player && !this.player.setVolume) {
+    const setVolume = (event: MouseEvent) => {
+      if (!this.controlsVolume) {
         return;
       }
 
       const { left, width } = this.controlsVolume.getBoundingClientRect();
-      const volume = Math.min(Math.max(0, Math.round((e.clientX - left) * 100 / width)), 100);
+      const volume = Math.min(Math.max(0, Math.round((event.clientX - left) * 100 / width)), 100);
       if (volume > 0) {
-        this.player.unMute();
-        this.player.setVolume(volume);
+        if (this.player && this.player.setVolume) {
+          this.player.unMute();
+          this.player.setVolume(volume);
+        }
 
         this.isMute.set(false);
         this.volume.set(volume);
       } else {
-        this.player.mute();
-        this.player.setVolume(1);
+        if (this.player && this.player.setVolume) {
+          this.player.mute();
+          this.player.setVolume(1);
+        }
 
         this.isMute.set(true);
         this.volume.set(0);
@@ -844,6 +870,10 @@ class PlayerViewModel {
 
       localStorage.setItem('player.volume', volume.toString());
     };
+
+    setVolume(e);
+
+    const onMouseMove = (e: MouseEvent) => setVolume(e);
 
     const onMouseUp = (e: MouseEvent) => {
       document.removeEventListener('mousemove', onMouseMove);
@@ -862,7 +892,7 @@ class PlayerViewModel {
     } else {
       this.isSyncEnabled.set(true);
 
-      if (this.player && !this.isPlaying.get()) {
+      if (this.player && this.player.getVideoUrl() !== 'https://www.youtube.com/watch' && !this.isPlaying.get()) {
         this.player.playVideo();
       }
     }
@@ -872,6 +902,16 @@ class PlayerViewModel {
     e.preventDefault();
 
     this.isSubEnabled.set(!this.isSubEnabled.get());
+  };
+
+  private onControlsOptionsClick = (e: Event) => {
+    e.preventDefault();
+
+    this.showOptions.set(!this.showOptions.get());
+  };
+
+  private onControlsCinemaClick = (e: Event) => {
+    e.preventDefault();
   };
 
   private onControlsFullscreenClick = (e: Event) => {
@@ -887,41 +927,27 @@ class PlayerViewModel {
   private onControlsSeekMouseDown = (e: MouseEvent) => {
     e.preventDefault();
 
-    if (!this.controlsSeek || !this.player && !this.player.seekTo) {
-      return;
-    }
-
     this.isSyncEnabled.set(false);
     this.isSeeking = true;
     this.lastPlaying = this.isPlaying.get();
 
-    const duration = this.duration.get();
-    const { left, width } = this.controlsSeek.getBoundingClientRect();
-    const time = Math.round(Math.min(Math.max(0, Math.round((e.clientX - left) * duration / width)), duration));
-    const playerTime = this.player.getCurrentTime();
-    if (Math.abs(playerTime - time) > 2) {
-      this.player.seekTo(time, false);
-    }
-
-    if (this.controlsSeekFill) {
-      this.controlsSeekFill.style.width = `${time * 100 / duration}%`;
-    }
-
-    if (this.controlsSeekHandle) {
-      this.controlsSeekHandle.style.left = `${time * 100 / duration}%`;
-    }
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!this.controlsSeek || !this.player && !this.player.seekTo) {
+    const seek = (event: MouseEvent, options: { checkPlayerTime: boolean, allowSeekAhead: boolean }) => {
+      if (!this.controlsSeek || !this.player || !this.player.seekTo
+        || this.player.getVideoUrl() === 'https://www.youtube.com/watch') {
         return;
       }
 
+      const { checkPlayerTime, allowSeekAhead } = options;
       const duration = this.duration.get();
       const { left, width } = this.controlsSeek.getBoundingClientRect();
-      const time = Math.round(Math.min(Math.max(0, Math.round((e.clientX - left) * duration / width)), duration));
+      const time = Math.round(Math.min(Math.max(0, Math.round((event.clientX - left) * duration / width)), duration));
       const playerTime = this.player.getCurrentTime();
-      if (Math.abs(playerTime - time) > 2) {
-        this.player.seekTo(time, false);
+      if (checkPlayerTime) {
+        if (Math.abs(playerTime - time) > 1) {
+          this.player.seekTo(time, allowSeekAhead);
+        }
+      } else {
+        this.player.seekTo(time, allowSeekAhead);
       }
 
       if (this.controlsSeekFill) {
@@ -933,30 +959,20 @@ class PlayerViewModel {
       }
     };
 
+    seek(e, { checkPlayerTime: true, allowSeekAhead: false });
+
+    const onMouseMove = (e: MouseEvent) => seek(e, { checkPlayerTime: true, allowSeekAhead: false });
+
     const onMouseUp = (e: MouseEvent) => {
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
 
-      if (!this.controlsSeek || !this.player && !this.player.seekTo) {
-        return;
-      }
-
-      const duration = this.duration.get();
-      const { left, width } = this.controlsSeek.getBoundingClientRect();
-      const time = Math.round(Math.min(Math.max(0, Math.round((e.clientX - left) * duration / width)), duration));
-      this.player.seekTo(time, true);
-
-      if (this.controlsSeekFill) {
-        this.controlsSeekFill.style.width = `${time * 100 / duration}%`;
-      }
-
-      if (this.controlsSeekHandle) {
-        this.controlsSeekHandle.style.left = `${time * 100 / duration}%`;
-      }
+      seek(e, { checkPlayerTime: false, allowSeekAhead: true });
 
       this.isSeeking = false;
 
-      if (this.lastPlaying) {
+      if (this.lastPlaying && this.player && this.player.playVideo
+        && this.player.getVideoUrl() !== 'https://www.youtube.com/watch') {
         this.player.playVideo();
       }
     };
