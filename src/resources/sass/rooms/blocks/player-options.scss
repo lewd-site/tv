@@ -3,6 +3,11 @@
   &__item-text {
     position: relative;
 
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
+
     border: 0;
 
     color: #DFDFDF;
@@ -20,8 +25,66 @@
     cursor: pointer;
     user-select: none;
 
+    & > :not(:last-child) {
+      margin-right: 0.5em;
+    }
+
+    & > :last-child {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: pre;
+    }
+
     &:hover {
       background: #2E2E2E;
+    }
+
+    &_left {
+      padding-left: 29px;
+
+      &::before {
+        content: '';
+
+        position: absolute;
+        top: 50%;
+        left: 16px;
+
+        transform: translate(0, -50%);
+
+        background: url('/images/chevron-left.svg');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+
+        display: block;
+
+        width: 5px;
+        height: 10px;
+      }
+    }
+
+    &_right {
+      padding-right: 29px;
+
+      &::after {
+        content: '';
+
+        position: absolute;
+        top: 50%;
+        right: 16px;
+
+        transform: translate(0, -50%);
+
+        background: url('/images/chevron-right.svg');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+
+        display: block;
+
+        width: 5px;
+        height: 10px;
+      }
     }
   }
 
@@ -35,7 +98,7 @@
 
       display: block;
 
-      background: #414141;
+      background: #545454;
 
       width: calc(100% - 32px);
       height: 1px;

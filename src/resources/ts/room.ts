@@ -311,6 +311,8 @@ class PlayerViewModel {
   private subtitleTracks = new Observable<YouTubeSubtitleTrack[]>([]);
   private subtitleTrack = new Observable<YouTubeSubtitleTrack | null>(null);
   private lastSubtitleTrack: YouTubeSubtitleTrack | null = null;
+  private qualityLevels = new Observable<string[]>(['auto']);
+  private qualityLevel = new Observable<string>('auto');
   private isFullscreen = new Observable(false);
   private lastVolume = 50;
   private isSeeking = false;
@@ -594,12 +596,27 @@ class PlayerViewModel {
 
     const playerOptionsViewModel = new PlayerOptions({
       propsData: {
+        isSyncEnabled: this.isSyncEnabled,
+
         subtitleTracks: this.subtitleTracks,
         subtitleTrack: this.subtitleTrack,
+
+        qualityLevels: this.qualityLevels,
+        qualityLevel: this.qualityLevel,
       },
     });
 
     playerOptionsViewModel.$mount('#player-options-mount');
+
+    playerOptionsViewModel.$on('syncChange', (isSyncEnabled: boolean) => {
+      this.isSyncEnabled.set(isSyncEnabled);
+
+      if (isSyncEnabled && !this.isPlaying.get()
+        && this.player && this.player.getVideoUrl() !== 'https://www.youtube.com/watch') {
+        this.player.playVideo();
+      }
+    });
+
     playerOptionsViewModel.$on('subtitleTrackChange', (track: YouTubeSubtitleTrack | null) => {
       if (track !== null) {
         this.isSubEnabled.set(true);
@@ -615,24 +632,67 @@ class PlayerViewModel {
 
       this.subtitleTrack.set(track);
     });
+
+    playerOptionsViewModel.$on('qualityChange', async (quality: string) => {
+      if (!this.player || !this.player.loadVideoById) {
+        return;
+      }
+
+      const video = await this.room.getCurrentVideo();
+      if (!video) {
+        return;
+      }
+
+      const videoId = this.getVideoId(video);
+      if (!videoId) {
+        return;
+      }
+
+      const timeNow = await this.room.now();
+      const time = (timeNow - new Date(video.startAt).getTime()) / 1000 + video.offset;
+
+      this.player.stopVideo();
+      this.player.clearVideo();
+
+      if (quality === 'auto') {
+        this.player.loadVideoById(videoId, time);
+        this.player.setPlaybackQuality('default');
+      } else {
+        this.player.loadVideoById(videoId, time, quality);
+        this.player.setPlaybackQuality(quality);
+      }
+    });
   }
+
+  private getVideoId = (video: Video) => {
+    const match = video.url.match(youTubeRegExp);
+    if (!match) {
+      return null;
+    }
+
+    return match[1];
+  };
+
+  private getCurrentVideoId = async () => {
+    const video = await this.room.getCurrentVideo();
+    if (!video) {
+      return null;
+    }
+
+    return this.getVideoId(video);
+  };
 
   private syncVideo = async () => {
     if (!this.player || !this.player.getVideoUrl) {
       return;
     }
 
-    const video = await this.room.getCurrentVideo();
-    if (!video) {
+    const videoId = await this.getCurrentVideoId();
+    if (!videoId) {
       if (this.player.pauseVideo) {
         this.player.pauseVideo();
       }
 
-      return;
-    }
-
-    const match = video.url.match(youTubeRegExp);
-    if (!match) {
       return;
     }
 
@@ -654,9 +714,8 @@ class PlayerViewModel {
       this.player.playVideo();
     };
 
-    const videoId = match[1];
     const currentVideoUrl = this.player.getVideoUrl();
-    if (currentVideoUrl === 'https://www.youtube.com/watch') {
+    if (!currentVideoUrl || currentVideoUrl === 'https://www.youtube.com/watch') {
       return loadVideo(videoId);
     }
 
@@ -761,6 +820,10 @@ class PlayerViewModel {
       }
     };
 
+    const onPlaybackQualityChange = ({ data }: { data: string }) => {
+      this.qualityLevel.set(data);
+    };
+
     const onStateChange = ({ data }: { data: number }) => {
       switch (data) {
         case window.YT.PlayerState.PAUSED:
@@ -769,8 +832,18 @@ class PlayerViewModel {
           break;
 
         case window.YT.PlayerState.BUFFERING:
+          this.isPlaying.set(true);
+          break;
+
         case window.YT.PlayerState.PLAYING:
           this.isPlaying.set(true);
+
+          const qualityLevels = this.player.getAvailableQualityLevels();
+          if (qualityLevels && qualityLevels.length) {
+            this.qualityLevels.set(qualityLevels);
+          } else {
+            this.qualityLevels.set(['auto']);
+          }
           break;
       }
     };
@@ -795,6 +868,7 @@ class PlayerViewModel {
       events: {
         onReady,
         onApiChange,
+        onPlaybackQualityChange,
         onStateChange,
       },
     });
