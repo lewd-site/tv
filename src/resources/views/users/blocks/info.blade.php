@@ -3,7 +3,11 @@
 <ul class="user-info__list">
   @foreach ($user->rooms as $room)
   <li class="user-info__item">
-    <a class="user-info__name" href="{{ route('rooms.show', ['room' => $room->url]) }}" data-draggable="false">{{ $room->name }}</a>
+    <a class="user-info__name" href="{{ route('rooms.show', ['room' => $room->url]) }}" data-draggable="false">
+      {{ $room->name }}
+    </a>
+
+    <span class="user-info__user-count">{{ $room->userCount }}</span>
   </li>
   @endforeach
 </ul>

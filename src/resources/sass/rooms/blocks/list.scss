@@ -1,7 +1,14 @@
 .room-list {
+  &__list {
+    & > :not(:last-child) {
+      margin-bottom: 24px;
+    }
+  }
+
   &__item {
     display: flex;
     flex-flow: row wrap;
+    justify-content: space-between;
     align-items: center;
 
     background: #252525;
@@ -14,9 +21,32 @@
     font-weight: 500;
   }
 
-  &__list {
-    & > :not(:last-child) {
-      margin-bottom: 24px;
+  &__name {
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__user-count {
+    font-weight: normal;
+
+    margin-left: 64px;
+
+    &::after {
+      content: '';
+
+      display: inline-block;
+
+      background: url('/images/user.svg');
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+
+      margin-left: 16px;
+
+      width: 16px;
+      height: 16px;
+
+      vertical-align: middle;
     }
   }
 }

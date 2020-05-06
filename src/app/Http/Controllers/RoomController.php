@@ -9,6 +9,7 @@ use App\Models\ChatMessage;
 use App\Models\Room;
 use App\Models\Video;
 use App\Services\RoomService;
+use App\Services\UserCountService;
 use App\Services\VideoService;
 use Exception;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -19,18 +20,28 @@ class RoomController extends Controller
 {
   const CHAT_MESSAGES = 100;
 
-  protected RoomService $roomService;
-  protected VideoService $videoService;
+  private RoomService $roomService;
+  private VideoService $videoService;
+  private UserCountService $userCountService;
 
-  public function __construct(RoomService $roomService, VideoService $videoService)
-  {
+  public function __construct(
+    RoomService $roomService,
+    VideoService $videoService,
+    UserCountService $userCountService
+  ) {
     $this->roomService = $roomService;
     $this->videoService = $videoService;
+    $this->userCountService = $userCountService;
   }
 
   public function list()
   {
     $rooms = Room::all();
+    $rooms = $rooms->map(function (Room $room) {
+      $room->userCount = $this->userCountService->getCount($room->id);
+
+      return $room;
+    });
 
     return view('rooms.pages.list', ['rooms' => $rooms]);
   }
@@ -50,9 +61,10 @@ class RoomController extends Controller
       ->get();
 
     return view('rooms.pages.show', [
-      'room'     => $room,
-      'videos'   => $videos,
-      'messages' => $messages,
+      'room'      => $room,
+      'videos'    => $videos,
+      'messages'  => $messages,
+      'userCount' => $this->userCountService->getCount($room->id),
     ]);
   }
 

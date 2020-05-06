@@ -3,7 +3,7 @@
     <div class="chat__header-left"></div>
 
     <div class="chat__header-right">
-      <span class="chat__count">0 online</span>
+      <span class="chat__count">{{ $userCount }} online</span>
     </div>
   </div>
 

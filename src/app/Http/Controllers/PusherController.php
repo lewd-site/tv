@@ -2,11 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\UserCountService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redis;
 
 class PusherController extends Controller
 {
+  private UserCountService $userCountService;
+
+  public function __construct(UserCountService $userCountService)
+  {
+    $this->userCountService = $userCountService;
+  }
+
   public function webhook(Request $request)
   {
     $key = $request->header('X-Pusher-Key');
@@ -23,12 +30,10 @@ class PusherController extends Controller
       if (preg_match('/^presence-rooms.(\d+)$/', $event['channel'], $matches)) {
         $roomId = $matches[1];
         $userId = $event['user_id'];
-
-        $key = "rooms:$roomId:users";
         if ($event['name'] === 'member_added') {
-          Redis::sadd($key, $userId);
+          $this->userCountService->add($roomId, $userId);
         } elseif ($event['name'] === 'member_removed') {
-          Redis::srem($key, $userId);
+          $this->userCountService->remove($roomId, $userId);
         }
       }
     }
