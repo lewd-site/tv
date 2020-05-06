@@ -2,21 +2,11 @@ import Axios, { CancelTokenSource } from 'axios';
 import axios from './axios';
 import { eventBus, field, Field, Observable } from './utils';
 
-interface OEmbedResponse {
-  readonly html: string;
-  readonly version: string;
-  readonly url: string;
-  readonly type: string;
+interface VideoPreviewResponse {
   readonly title: string;
-  readonly width: number;
-  readonly height: number
-  readonly thumbnail_url: string;
-  readonly thumbnail_width: number;
-  readonly thumbnail_height: number;
-  readonly author_url: string;
-  readonly author_name: string;
-  readonly provider_url: string;
-  readonly provider_name: string;
+  readonly thumbnailUrl: string;
+  readonly authorName?: string;
+  readonly authorUrl?: string;
 }
 
 interface Placeholder {
@@ -42,10 +32,10 @@ interface Info {
 type State = Placeholder | Loading | Error | Info;
 
 class Api {
-  private cache: { [key: string]: OEmbedResponse } = {};
+  private cache: { [key: string]: VideoPreviewResponse } = {};
   private cancelTokenSource: CancelTokenSource | null = null;
 
-  public getOEmbedInfo = async (url: string): Promise<OEmbedResponse> => {
+  public getVideoPreviewData = async (url: string): Promise<VideoPreviewResponse> => {
     if (this.cancelTokenSource) {
       this.cancelTokenSource.cancel();
       this.cancelTokenSource = null;
@@ -57,8 +47,8 @@ class Api {
 
     this.cancelTokenSource = Axios.CancelToken.source();
 
-    const serviceUrl = `/api/oembed?url=${encodeURIComponent(url)}`;
-    const response = await axios.get<OEmbedResponse>(serviceUrl, {
+    const serviceUrl = `/api/video-preview?url=${encodeURIComponent(url)}`;
+    const response = await axios.get<VideoPreviewResponse>(serviceUrl, {
       cancelToken: this.cancelTokenSource.token,
     });
 
@@ -73,6 +63,10 @@ class Api {
 const youtubePatterns = [
   /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw])/,
   /^(?:https?:\/\/)?(?:www\.)?youtu\.be\/([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw])/,
+];
+
+const anilibriaPatterns = [
+  /^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/public\/iframe.php\?.*id=(\d+)#(\d+)/
 ];
 
 class AddVideoViewModel {
@@ -225,10 +219,14 @@ class AddVideoViewModel {
     return youtubePatterns.some(pattern => pattern.test(url));
   };
 
+  private isAnilibriaVideo = (url: string) => {
+    return anilibriaPatterns.some(pattern => pattern.test(url));
+  };
+
   private onUrlChange = async () => {
     const urlInput = this.fields['url'].element;
     const { value } = urlInput;
-    if (!value.length || !this.isYouTubeVideo(value)) {
+    if (!value.length || !(this.isYouTubeVideo(value) || this.isAnilibriaVideo(value))) {
       this.state.set({ type: 'placeholder' });
       return;
     }
@@ -236,13 +234,13 @@ class AddVideoViewModel {
     this.state.set({ type: 'loading' });
 
     try {
-      const data = await this.api.getOEmbedInfo(value);
+      const data = await this.api.getVideoPreviewData(value);
       this.state.set({
         type: 'info',
-        thumbnailUrl: data.thumbnail_url,
+        thumbnailUrl: data.thumbnailUrl,
         title: data.title,
-        author: data.author_name,
-        authorUrl: data.author_url,
+        author: data.authorName || '',
+        authorUrl: data.authorUrl || '',
       });
     } catch (e) {
       if (!Axios.isCancel(e)) {

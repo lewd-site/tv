@@ -7,6 +7,7 @@ use App\Events\VideoDeletedEvent;
 use App\Models\Room;
 use App\Models\User;
 use App\Models\Video;
+use App\Services\Video\AnilibriaProvider;
 use App\Services\Video\ProviderInterface;
 use App\Services\Video\YouTubeProvider;
 use Illuminate\Support\Carbon;
@@ -22,15 +23,40 @@ class VideoService
   /** @var ProviderInterface[] */
   private array $providers = [];
 
-  public function __construct(YouTubeProvider $youTubeProvider)
-  {
+  public function __construct(
+    AnilibriaProvider $anilibriaProvider,
+    YouTubeProvider $youTubeProvider
+  ) {
+    $this->providers[] = $anilibriaProvider;
     $this->providers[] = $youTubeProvider;
   }
 
   /**
    * @throws NotFoundHttpException
    */
-  private function getVideoInfo(string $url): array
+  public function getPreviewData(string $url): array
+  {
+    $cacheKey = "video-preview:$url";
+    if (Cache::has($cacheKey)) {
+      return Cache::get($cacheKey);
+    }
+
+    foreach ($this->providers as $provider) {
+      if ($provider->check($url)) {
+        $data = $provider->getPreviewData($url);
+        Cache::put($cacheKey, $data, static::CACHE_TTL);
+
+        return $data;
+      }
+    }
+
+    throw new NotFoundHttpException('Video not found');
+  }
+
+  /**
+   * @throws NotFoundHttpException
+   */
+  private function getVideoData(string $url): array
   {
     $cacheKey = "video:$url";
     if (Cache::has($cacheKey)) {
@@ -55,7 +81,7 @@ class VideoService
    */
   public function create(Room $room, User $user, string $url, ?int $start, ?int $end): Video
   {
-    $data = $this->getVideoInfo($url);
+    $data = $this->getVideoData($url);
 
     if (isset($end)) {
       $data['duration'] = $end;

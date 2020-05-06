@@ -20,17 +20,17 @@ class RoomController extends Controller
   const CHAT_MESSAGES = 100;
 
   private RoomService $roomService;
-  private VideoService $videoService;
   private UserCountService $userCountService;
+  private VideoService $videoService;
 
   public function __construct(
     RoomService $roomService,
-    VideoService $videoService,
-    UserCountService $userCountService
+    UserCountService $userCountService,
+    VideoService $videoService
   ) {
     $this->roomService = $roomService;
-    $this->videoService = $videoService;
     $this->userCountService = $userCountService;
+    $this->videoService = $videoService;
   }
 
   public function list()

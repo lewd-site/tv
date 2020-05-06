@@ -44,6 +44,31 @@ class YouTubeProvider implements ProviderInterface
   /**
    * @throws NotFoundHttpException
    */
+  public function getPreviewData(string $url): array
+  {
+    if (!$this->check($url)) {
+      throw new NotFoundHttpException('Video not found');
+    }
+
+    $oembedUrl = 'https://www.youtube.com/oembed?url=' . urlencode($url);
+    $response = $response = Http::get($oembedUrl);
+    if (!$response->ok()) {
+      throw new NotFoundHttpException('Video not found');
+    }
+
+    $data = $response->json();
+
+    return [
+      'title'        => $data['title'],
+      'thumbnailUrl' => $data['thumbnail_url'],
+      'authorName'   => $data['author_name'],
+      'authorUrl'    => $data['author_url'],
+    ];
+  }
+
+  /**
+   * @throws NotFoundHttpException
+   */
   public function getData(string $url): array
   {
     if (!$this->check($url)) {
@@ -66,13 +91,11 @@ class YouTubeProvider implements ProviderInterface
     $item = head($responseData['items']);
     $interval = new DateInterval($item['contentDetails']['duration']);
 
-    $data = [
+    return [
       'url'      => "https://www.youtube.com/watch?v=$id",
       'type'     => 'youtube',
       'title'    => $item['snippet']['title'],
       'duration' => $interval->s + 60 * $interval->i + 3600 * $interval->h + 86400 * $interval->d,
     ];
-
-    return $data;
   }
 }

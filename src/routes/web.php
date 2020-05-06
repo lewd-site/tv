@@ -68,3 +68,7 @@ Route::name('rooms.')->group(function () {
   Route::get('rooms', 'RoomController@list')->name('list');
   Route::get('{room}', 'RoomController@show')->name('show');
 });
+
+Route::name('videos.')->group(function () {
+  Route::get('api/video-preview', 'VideoController@preview')->name('preview');
+});
