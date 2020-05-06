@@ -5,7 +5,7 @@
     }
   }
 
-  &__item {
+  &__item-inner {
     display: flex;
     flex-flow: row wrap;
     justify-content: space-between;
@@ -22,14 +22,27 @@
   }
 
   &__name {
+    margin-right: 64px;
+
+    width: 116px;
+
+    white-space: pre;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__video {
+    flex: 1;
+
+    margin-right: 64px;
+
+    white-space: pre;
     overflow-x: hidden;
     text-overflow: ellipsis;
   }
 
   &__user-count {
     font-weight: normal;
-
-    margin-left: 64px;
 
     &::after {
       content: '';

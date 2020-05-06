@@ -11,7 +11,6 @@ use App\Models\Video;
 use App\Services\RoomService;
 use App\Services\UserCountService;
 use App\Services\VideoService;
-use Exception;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

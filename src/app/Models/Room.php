@@ -42,6 +42,16 @@ class Room extends Model
     return $this->hasMany(ChatMessage::class, 'room_id', 'id');
   }
 
+  public function currentVideo(): ?Video
+  {
+    $now = now();
+
+    return $this->videos()
+      ->where('start_at', '<=', $now)
+      ->where('end_at', '>', $now)
+      ->first();
+  }
+
   public function getViewModel(): array
   {
     return [
