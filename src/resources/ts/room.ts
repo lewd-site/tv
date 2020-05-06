@@ -42,7 +42,10 @@ interface YouTubeSubtitleTrack {
 
 const CHAT_MESSAGES = 100;
 
-const youTubeRegExp = /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw]).*$/;
+const youtubePatterns = [
+  /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw])/,
+  /^(?:https?:\/\/)?(?:www\.)?youtu\.be\/([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw])/,
+];
 
 class RoomModel {
   public readonly users = new Observable<PresenceChannelUser[]>([]);
@@ -643,7 +646,7 @@ class PlayerViewModel {
         return;
       }
 
-      const videoId = this.getVideoId(video);
+      const videoId = this.getVideoId(video.url);
       if (!videoId) {
         return;
       }
@@ -664,13 +667,15 @@ class PlayerViewModel {
     });
   }
 
-  private getVideoId = (video: Video) => {
-    const match = video.url.match(youTubeRegExp);
-    if (!match) {
-      return null;
+  private getVideoId = (url: string) => {
+    for (let pattern of youtubePatterns) {
+      const match = url.match(pattern);
+      if (match) {
+        return match[1];
+      }
     }
 
-    return match[1];
+    return null;
   };
 
   private getCurrentVideoId = async () => {
@@ -679,7 +684,7 @@ class PlayerViewModel {
       return null;
     }
 
-    return this.getVideoId(video);
+    return this.getVideoId(video.url);
   };
 
   private syncVideo = async () => {
@@ -719,12 +724,7 @@ class PlayerViewModel {
       return loadVideo(videoId);
     }
 
-    const currentVideoMatch = currentVideoUrl.match(youTubeRegExp);
-    if (!currentVideoMatch) {
-      return loadVideo(videoId);
-    }
-
-    const currentVideoId = currentVideoMatch[1];
+    const currentVideoId = this.getVideoId(currentVideoUrl);
     if (currentVideoId !== videoId) {
       return loadVideo(videoId);
     }

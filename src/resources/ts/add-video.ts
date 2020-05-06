@@ -70,7 +70,10 @@ class Api {
   };
 }
 
-const youTubeRegExp = /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw]).*$/;
+const youtubePatterns = [
+  /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw])/,
+  /^(?:https?:\/\/)?(?:www\.)?youtu\.be\/([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw])/,
+];
 
 class AddVideoViewModel {
   private readonly enableStart: HTMLInputElement | null;
@@ -218,10 +221,14 @@ class AddVideoViewModel {
     }
   };
 
+  private isYouTubeVideo = (url: string) => {
+    return youtubePatterns.some(pattern => pattern.test(url));
+  };
+
   private onUrlChange = async () => {
     const urlInput = this.fields['url'].element;
     const { value } = urlInput;
-    if (!value.length || !youTubeRegExp.test(value)) {
+    if (!value.length || !this.isYouTubeVideo(value)) {
       this.state.set({ type: 'placeholder' });
       return;
     }

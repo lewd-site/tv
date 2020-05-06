@@ -7,7 +7,11 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class YouTubeProvider implements ProviderInterface
 {
-  const URL_PATTERN = '/^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=[0-9A-Za-z_-]{10}[048AEIMQUYcgkosw]/';
+  /** @var string[] */
+  const URL_PATTERNS = [
+    '/^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw])/',
+    '/^(?:https?:\/\/)?(?:www\.)?youtu\.be\/([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw])/',
+  ];
 
   public function check(string $url): bool
   {
@@ -18,7 +22,13 @@ class YouTubeProvider implements ProviderInterface
       return $data[$url];
     }
 
-    return $data[$url] = (bool) preg_match(static::URL_PATTERN, $url);
+    foreach (static::URL_PATTERNS as $pattern) {
+      if (preg_match($pattern, $url)) {
+        return $data[$url] = true;
+      }
+    }
+
+    return $data[$url] = false;
   }
 
   /**

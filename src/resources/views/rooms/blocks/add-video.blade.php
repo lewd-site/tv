@@ -8,7 +8,7 @@
       'name' => 'url',
       'label' => 'Ссылка на видео',
       'value' => old('url'),
-      'attributes' => 'required pattern="^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw]).*$" maxlength="2048"'
+      'attributes' => 'required maxlength="2048"'
       ])
     </div>
 
