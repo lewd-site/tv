@@ -2,7 +2,7 @@ import axios from './axios';
 import Chat from './components/Chat.vue';
 import PlayerOptions from './components/PlayerOptions.vue';
 import Playlist from './components/Playlist.vue';
-import { Player, PlayerState, SubtitleTrack, YouTubePlayer } from './player';
+import { Player, PlayerState, SubtitleTrack, YouTubePlayer, Html5Player } from './player';
 import { Room, ChatMessage, Video } from './types';
 import { eventBus, Observable } from './utils';
 
@@ -641,55 +641,67 @@ class PlayerViewModel {
         this.hideControls();
       }
     } else {
-      if (videoUrl && YouTubePlayer.canPlayVideo(videoUrl)) {
-        this.player = new YouTubePlayer();
-
-        this.player.eventBus.subscribe('ready', this.showControls);
-
-        this.player.eventBus.subscribe('subtitleTracksChanged', () => {
+      if (videoUrl) {
+        const setupEvents = () => {
           if (!this.player) {
             return;
           }
 
-          const tracks = this.player.getSubtitleTracks();
-          this.subtitleTracks.set(tracks);
+          this.player.eventBus.subscribe('ready', this.showControls);
 
-          const isSubEnabled = this.isSubEnabled.get();
-          if (isSubEnabled) {
-            const track = this.player.getSubtitleTrack();
-            this.subtitleTrack.set(track);
-          } else {
-            this.subtitleTrack.set(null);
-          }
-        });
+          this.player.eventBus.subscribe('subtitleTracksChanged', () => {
+            if (!this.player) {
+              return;
+            }
 
-        this.player.eventBus.subscribe('qualityChanged', (qualityLevel: string) => {
-          this.qualityLevel.set(qualityLevel);
-        });
+            const tracks = this.player.getSubtitleTracks();
+            this.subtitleTracks.set(tracks);
 
-        this.player.eventBus.subscribe('stateChanged', (state: PlayerState) => {
-          switch (state) {
-            case 'paused':
-            case 'ended':
-              this.isPlaying.set(false);
-              break;
+            const isSubEnabled = this.isSubEnabled.get();
+            if (isSubEnabled) {
+              const track = this.player.getSubtitleTrack();
+              this.subtitleTrack.set(track);
+            } else {
+              this.subtitleTrack.set(null);
+            }
+          });
 
-            case 'buffering':
-              this.isPlaying.set(true);
-              break;
+          this.player.eventBus.subscribe('qualityChanged', (qualityLevel: string) => {
+            this.qualityLevel.set(qualityLevel);
+          });
 
-            case 'playing':
-              this.isPlaying.set(true);
+          this.player.eventBus.subscribe('stateChanged', (state: PlayerState) => {
+            switch (state) {
+              case 'paused':
+              case 'ended':
+                this.isPlaying.set(false);
+                break;
 
-              const qualityLevels = this.player?.getAvailableQualityLevels();
-              if (qualityLevels && qualityLevels.length) {
-                this.qualityLevels.set(qualityLevels);
-              } else {
-                this.qualityLevels.set(['auto']);
-              }
-              break;
-          }
-        });
+              case 'buffering':
+                this.isPlaying.set(true);
+                break;
+
+              case 'playing':
+                this.isPlaying.set(true);
+
+                const qualityLevels = this.player?.getAvailableQualityLevels();
+                if (qualityLevels && qualityLevels.length) {
+                  this.qualityLevels.set(qualityLevels);
+                } else {
+                  this.qualityLevels.set(['auto']);
+                }
+                break;
+            }
+          });
+        };
+
+        if (YouTubePlayer.canPlayVideo(videoUrl)) {
+          this.player = new YouTubePlayer();
+          setupEvents();
+        } else if (Html5Player.canPlayVideo(videoUrl)) {
+          this.player = new Html5Player('video');
+          setupEvents();
+        }
       }
     }
   };

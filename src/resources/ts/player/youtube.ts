@@ -81,7 +81,11 @@ export class YouTubePlayer implements Player {
     this.eventBus.unsubscribeAll();
   };
 
-  public readonly canPlayVideo = (url: string) => YouTubePlayer.canPlayVideo(url);
+  public static canPlayVideo = (url: string) => {
+    return youtubePatterns.some(pattern => url.match(pattern));
+  };
+
+  public canPlayVideo = (url: string) => YouTubePlayer.canPlayVideo(url);
 
   public hasVideo = () => this.getVideoUrl() !== null;
 
@@ -96,10 +100,6 @@ export class YouTubePlayer implements Player {
     }
 
     return videoUrl;
-  };
-
-  public static canPlayVideo = (url: string) => {
-    return youtubePatterns.some(pattern => url.match(pattern));
   };
 
   public static getVideoId = (url: string) => {

@@ -129,7 +129,7 @@ class AnilibriaProvider implements ProviderInterface
     }
 
     return [
-      'url'      => $episode['srcHd'],
+      'url'      => strtok($episode['srcHd'], '?'),
       'type'     => 'html5',
       'title'    => $data['names'][0] . ' – ' . $episode['title'],
       'duration' => $this->getM3u8Duration($m3u8Response->body()),
