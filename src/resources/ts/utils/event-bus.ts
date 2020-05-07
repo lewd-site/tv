@@ -23,8 +23,13 @@ export class EventBus {
     this.listeners[event] = this.listeners[event].filter(l => l !== listener);
   }
 
-  public unsubscribeAll(event: string): void {
-    delete this.listeners[event];
+  public unsubscribeAll(event?: string): void {
+    if (event) {
+      delete this.listeners[event];
+    } else {
+      const events = Object.keys(this.listeners);
+      events.forEach(event => delete this.listeners[event]);
+    }
   }
 
   public emit(event: string, ...args: any[]) {

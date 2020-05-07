@@ -2,6 +2,7 @@ import axios from './axios';
 import Chat from './components/Chat.vue';
 import PlayerOptions from './components/PlayerOptions.vue';
 import Playlist from './components/Playlist.vue';
+import { Player, PlayerState, SubtitleTrack, YouTubePlayer } from './player';
 import { Room, ChatMessage, Video } from './types';
 import { eventBus, Observable } from './utils';
 
@@ -27,25 +28,7 @@ interface PresenceChannelUser {
   readonly name: string;
 }
 
-interface YouTubeSubtitleTrack {
-  readonly displayName: string;
-  readonly id: null;
-  readonly is_default: boolean;
-  readonly is_servable: boolean;
-  readonly is_translateable: boolean;
-  readonly kind: string;
-  readonly languageCode: string;
-  readonly languageName: string;
-  readonly name: null;
-  readonly vss_id: string;
-}
-
 const CHAT_MESSAGES = 100;
-
-const youtubePatterns = [
-  /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw])/,
-  /^(?:https?:\/\/)?(?:www\.)?youtu\.be\/([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw])/,
-];
 
 class RoomModel {
   public readonly users = new Observable<PresenceChannelUser[]>([]);
@@ -276,8 +259,6 @@ class AddVideoModalViewModel {
   };
 }
 
-const TIME_EPS = 1;
-
 class PlayerViewModel {
   private readonly playerWrapper: HTMLElement | null;
   private readonly playerOptions: HTMLElement | null;
@@ -300,7 +281,7 @@ class PlayerViewModel {
   private readonly controlsSeekFill: HTMLElement | null;
   private readonly controlsSeekHandle: HTMLElement | null;
 
-  private player: any = null;
+  private player: Player | null = null;
 
   private isPlaying = new Observable(false);
   private isMute = new Observable(false);
@@ -311,9 +292,9 @@ class PlayerViewModel {
   private isSyncEnabled = new Observable(false);
   private isSubEnabled = new Observable(true);
   private showOptions = new Observable(false);
-  private subtitleTracks = new Observable<YouTubeSubtitleTrack[]>([]);
-  private subtitleTrack = new Observable<YouTubeSubtitleTrack | null>(null);
-  private lastSubtitleTrack: YouTubeSubtitleTrack | null = null;
+  private subtitleTracks = new Observable<SubtitleTrack[]>([]);
+  private subtitleTrack = new Observable<SubtitleTrack | null>(null);
+  private lastSubtitleTrack: SubtitleTrack | null = null;
   private qualityLevels = new Observable<string[]>(['auto']);
   private qualityLevel = new Observable<string>('auto');
   private isFullscreen = new Observable(false);
@@ -496,30 +477,17 @@ class PlayerViewModel {
     });
 
     this.isSubEnabled.subscribe(isSubEnabled => {
-      if (this.player) {
-        if (isSubEnabled) {
-          this.player.loadModule('captions');
-          this.player.loadModule('cc');
-        } else {
-          this.player.unloadModule('captions');
-          this.player.unloadModule('cc');
-        }
+      if (isSubEnabled) {
+        this.player?.enableSubtitles();
+      } else {
+        this.player?.disableSubtitles();
       }
 
       if (isSubEnabled) {
         if (this.lastSubtitleTrack !== null) {
           this.subtitleTrack.set(this.lastSubtitleTrack);
         } else {
-          const options = this.player.getOptions() as string[];
-
-          let track = null;
-          if (options.indexOf('captions') !== -1) {
-            track = this.player.getOption('captions', 'track');
-          } else if (options.indexOf('cc') !== -1) {
-            track = this.player.getOption('cc', 'track');
-          }
-
-          this.subtitleTrack.set(track);
+          this.subtitleTrack.set(this.player?.getSubtitleTrack() || null);
         }
       } else {
         this.lastSubtitleTrack = this.subtitleTrack.get();
@@ -614,20 +582,15 @@ class PlayerViewModel {
     playerOptionsViewModel.$on('syncChange', (isSyncEnabled: boolean) => {
       this.isSyncEnabled.set(isSyncEnabled);
 
-      if (isSyncEnabled && !this.isPlaying.get()
-        && this.player && this.player.getVideoUrl() !== 'https://www.youtube.com/watch') {
+      if (isSyncEnabled && !this.isPlaying.get() && this.player?.hasVideo()) {
         this.player.playVideo();
       }
     });
 
-    playerOptionsViewModel.$on('subtitleTrackChange', (track: YouTubeSubtitleTrack | null) => {
+    playerOptionsViewModel.$on('subtitleTrackChange', (track: SubtitleTrack | null) => {
       if (track !== null) {
         this.isSubEnabled.set(true);
-
-        if (this.player) {
-          this.player.setOption('captions', 'track', { languageCode: track.languageCode });
-          this.player.setOption('cc', 'track', { languageCode: track.languageCode });
-        }
+        this.player?.setSubtitleTrack(track.languageCode);
       } else {
         this.lastSubtitleTrack = this.subtitleTrack.get();
         this.isSubEnabled.set(false);
@@ -636,102 +599,103 @@ class PlayerViewModel {
       this.subtitleTrack.set(track);
     });
 
-    playerOptionsViewModel.$on('qualityChange', async (quality: string) => {
-      if (!this.player || !this.player.loadVideoById) {
-        return;
-      }
-
-      const video = await this.room.getCurrentVideo();
-      if (!video) {
-        return;
-      }
-
-      const videoId = this.getVideoId(video.url);
-      if (!videoId) {
-        return;
-      }
-
-      const timeNow = await this.room.now();
-      const time = (timeNow - new Date(video.startAt).getTime()) / 1000 + video.offset;
-
-      this.player.stopVideo();
-      this.player.clearVideo();
-
-      if (quality === 'auto') {
-        this.player.loadVideoById(videoId, time);
-        this.player.setPlaybackQuality('default');
-      } else {
-        this.player.loadVideoById(videoId, time, quality);
-        this.player.setPlaybackQuality(quality);
-      }
+    playerOptionsViewModel.$on('qualityChange', (quality: string) => {
+      this.player?.setQuality(quality);
     });
   }
 
-  private getVideoId = (url: string) => {
-    for (let pattern of youtubePatterns) {
-      const match = url.match(pattern);
-      if (match) {
-        return match[1];
-      }
-    }
-
-    return null;
-  };
-
-  private getCurrentVideoId = async () => {
+  private getCurrentVideoUrl = async () => {
     const video = await this.room.getCurrentVideo();
     if (!video) {
       return null;
     }
 
-    return this.getVideoId(video.url);
+    return video.url;
   };
 
+  private hideControls = () => this.controls?.setAttribute('hidden', 'true');
+  private showControls = () => this.controls?.removeAttribute('hidden');
+
   private syncVideo = async () => {
-    if (!this.player || !this.player.getVideoUrl) {
-      return;
-    }
+    const videoUrl = await this.getCurrentVideoUrl();
 
-    const videoId = await this.getCurrentVideoId();
-    if (!videoId) {
-      if (this.player.pauseVideo) {
-        this.player.pauseVideo();
-      }
+    if (this.player) {
+      if (videoUrl) {
+        const currentVideoUrl = this.player.getVideoUrl();
+        if (currentVideoUrl !== videoUrl) {
+          if (this.player.canPlayVideo(videoUrl)) {
+            this.player.setVideoUrl(videoUrl);
+            this.player.setVolume(this.volume.get());
+            this.player.playVideo();
+          } else {
+            this.player.dispose();
+            this.player = null;
 
-      return;
-    }
-
-    const loadVideo = (videoId: string) => {
-      this.player.loadVideoById({ videoId });
-
-      if (this.volume.get() > 0) {
-        this.player.unMute();
-        this.player.setVolume(this.volume.get());
-
-        this.isMute.set(false);
+            this.hideControls();
+          }
+        }
       } else {
-        this.player.mute();
-        this.player.setVolume(1);
+        this.player.dispose();
+        this.player = null;
 
-        this.isMute.set(true);
+        this.hideControls();
       }
+    } else {
+      if (videoUrl && YouTubePlayer.canPlayVideo(videoUrl)) {
+        this.player = new YouTubePlayer();
 
-      this.player.playVideo();
-    };
+        this.player.eventBus.subscribe('ready', this.showControls);
 
-    const currentVideoUrl = this.player.getVideoUrl();
-    if (!currentVideoUrl || currentVideoUrl === 'https://www.youtube.com/watch') {
-      return loadVideo(videoId);
-    }
+        this.player.eventBus.subscribe('subtitleTracksChanged', () => {
+          if (!this.player) {
+            return;
+          }
 
-    const currentVideoId = this.getVideoId(currentVideoUrl);
-    if (currentVideoId !== videoId) {
-      return loadVideo(videoId);
+          const tracks = this.player.getSubtitleTracks();
+          this.subtitleTracks.set(tracks);
+
+          const isSubEnabled = this.isSubEnabled.get();
+          if (isSubEnabled) {
+            const track = this.player.getSubtitleTrack();
+            this.subtitleTrack.set(track);
+          } else {
+            this.subtitleTrack.set(null);
+          }
+        });
+
+        this.player.eventBus.subscribe('qualityChanged', (qualityLevel: string) => {
+          this.qualityLevel.set(qualityLevel);
+        });
+
+        this.player.eventBus.subscribe('stateChanged', (state: PlayerState) => {
+          switch (state) {
+            case 'paused':
+            case 'ended':
+              this.isPlaying.set(false);
+              break;
+
+            case 'buffering':
+              this.isPlaying.set(true);
+              break;
+
+            case 'playing':
+              this.isPlaying.set(true);
+
+              const qualityLevels = this.player?.getAvailableQualityLevels();
+              if (qualityLevels && qualityLevels.length) {
+                this.qualityLevels.set(qualityLevels);
+              } else {
+                this.qualityLevels.set(['auto']);
+              }
+              break;
+          }
+        });
+      }
     }
   };
 
   private syncVideoTime = async () => {
-    if (!this.player || !this.player.getCurrentTime) {
+    if (!this.player) {
       return;
     }
 
@@ -744,7 +708,7 @@ class PlayerViewModel {
     const playerTime = this.player.getCurrentTime();
     const time = (timeNow - new Date(video.startAt).getTime()) / 1000 + video.offset;
     if (Math.abs(playerTime - time) > 1) {
-      this.player.seekTo(time, true);
+      this.player.setCurrentTime(time, true);
     }
   };
 
@@ -772,7 +736,7 @@ class PlayerViewModel {
       await this.syncVideoTime();
     }
 
-    if (!this.player || !this.player.getCurrentTime) {
+    if (!this.player) {
       return;
     }
 
@@ -781,103 +745,10 @@ class PlayerViewModel {
     this.buffered.set(this.player.getVideoLoadedFraction() * 100);
   };
 
-  private initPlayer = () => {
-    if (this.player) {
-      return;
-    }
-
-    const onReady = () => {
-      this.controls?.removeAttribute('hidden');
-      this.isSyncEnabled.set(true);
-    };
-
-    const onApiChange = () => {
-      const isSubEnabled = this.isSubEnabled.get();
-      const options = this.player.getOptions() as string[];
-
-      if (options.indexOf('captions') !== -1) {
-        const tracks = this.player.getOption('captions', 'tracklist');
-        this.subtitleTracks.set(tracks);
-
-        if (isSubEnabled) {
-          const track = this.player.getOption('captions', 'track')
-          this.subtitleTrack.set(track);
-        } else {
-          this.subtitleTrack.set(null);
-        }
-      }
-
-      if (options.indexOf('cc') !== -1) {
-        const tracks = this.player.getOption('cc', 'tracklist');
-        this.subtitleTracks.set(tracks);
-
-        if (isSubEnabled) {
-          const track = this.player.getOption('cc', 'track')
-          this.subtitleTrack.set(track);
-        } else {
-          this.subtitleTrack.set(null);
-        }
-      }
-    };
-
-    const onPlaybackQualityChange = ({ data }: { data: string }) => {
-      this.qualityLevel.set(data);
-    };
-
-    const onStateChange = ({ data }: { data: number }) => {
-      switch (data) {
-        case window.YT.PlayerState.PAUSED:
-        case window.YT.PlayerState.ENDED:
-          this.isPlaying.set(false);
-          break;
-
-        case window.YT.PlayerState.BUFFERING:
-          this.isPlaying.set(true);
-          break;
-
-        case window.YT.PlayerState.PLAYING:
-          this.isPlaying.set(true);
-
-          const qualityLevels = this.player.getAvailableQualityLevels();
-          if (qualityLevels && qualityLevels.length) {
-            this.qualityLevels.set(qualityLevels);
-          } else {
-            this.qualityLevels.set(['auto']);
-          }
-          break;
-      }
-    };
-
-    this.player = new window.YT.Player('video', {
-      host: `${window.location.protocol}//www.youtube.com`,
-      origin: window.location.origin,
-      videoId: null,
-      playerVars: {
-        autoplay: 1,
-        autohide: 1,
-        cc_load_policy: 1,
-        controls: 0,
-        disablekb: 1,
-        fs: 0,
-        iv_load_policy: 3,
-        modestbranding: 1,
-        playsinline: 1,
-        rel: 0,
-        showinfo: 0,
-      },
-      events: {
-        onReady,
-        onApiChange,
-        onPlaybackQualityChange,
-        onStateChange,
-      },
-    });
-  };
-
   private onPlayButtonClick = (e: Event) => {
     e.preventDefault();
     this.playButton?.setAttribute('hidden', 'true');
-    this.initPlayer();
+    this.isSyncEnabled.set(true);
   };
 
   private onControlsPlayClick = (e: Event) => {
@@ -891,7 +762,7 @@ class PlayerViewModel {
 
     if (this.isPlaying.get()) {
       this.player.pauseVideo();
-    } else if (this.player.getVideoUrl() !== 'https://www.youtube.com/watch') {
+    } else if (this.player.hasVideo()) {
       this.player.playVideo();
     }
   };
@@ -901,16 +772,11 @@ class PlayerViewModel {
 
     if (this.volume.get() > 0) {
       this.lastVolume = this.volume.get();
-
-      this.player.mute();
-      this.player.setVolume(1);
-
+      this.player?.setVolume(0);
       this.isMute.set(true);
       this.volume.set(0);
     } else {
-      this.player.unMute();
-      this.player.setVolume(this.lastVolume);
-
+      this.player?.setVolume(this.lastVolume);
       this.isMute.set(false);
       this.volume.set(this.lastVolume);
     }
@@ -925,19 +791,11 @@ class PlayerViewModel {
       const { left, width } = this.controlsVolume.getBoundingClientRect();
       const volume = Math.min(Math.max(0, Math.round((event.clientX - left) * 100 / width)), 100);
       if (volume > 0) {
-        if (this.player && this.player.setVolume) {
-          this.player.unMute();
-          this.player.setVolume(volume);
-        }
-
+        this.player?.setVolume(volume);
         this.isMute.set(false);
         this.volume.set(volume);
       } else {
-        if (this.player && this.player.setVolume) {
-          this.player.mute();
-          this.player.setVolume(1);
-        }
-
+        this.player?.setVolume(0);
         this.isMute.set(true);
         this.volume.set(0);
       }
@@ -966,7 +824,7 @@ class PlayerViewModel {
     } else {
       this.isSyncEnabled.set(true);
 
-      if (this.player && this.player.getVideoUrl() !== 'https://www.youtube.com/watch' && !this.isPlaying.get()) {
+      if (this.player && this.player.hasVideo() && !this.isPlaying.get()) {
         this.player.playVideo();
       }
     }
@@ -1006,8 +864,7 @@ class PlayerViewModel {
     this.lastPlaying = this.isPlaying.get();
 
     const seek = (event: MouseEvent, options: { checkPlayerTime: boolean, allowSeekAhead: boolean }) => {
-      if (!this.controlsSeek || !this.player || !this.player.seekTo
-        || this.player.getVideoUrl() === 'https://www.youtube.com/watch') {
+      if (!this.controlsSeek || !this.player || !this.player.hasVideo()) {
         return;
       }
 
@@ -1018,10 +875,10 @@ class PlayerViewModel {
       const playerTime = this.player.getCurrentTime();
       if (checkPlayerTime) {
         if (Math.abs(playerTime - time) > 1) {
-          this.player.seekTo(time, allowSeekAhead);
+          this.player.setCurrentTime(time, allowSeekAhead);
         }
       } else {
-        this.player.seekTo(time, allowSeekAhead);
+        this.player.setCurrentTime(time, allowSeekAhead);
       }
 
       if (this.controlsSeekFill) {
@@ -1045,8 +902,7 @@ class PlayerViewModel {
 
       this.isSeeking = false;
 
-      if (this.lastPlaying && this.player && this.player.playVideo
-        && this.player.getVideoUrl() !== 'https://www.youtube.com/watch') {
+      if (this.lastPlaying && this.player && this.player.hasVideo()) {
         this.player.playVideo();
       }
     };
