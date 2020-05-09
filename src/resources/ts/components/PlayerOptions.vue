@@ -76,6 +76,7 @@ const qualities = {
   auto: 'Авто',
 
   // Anilibria.tv
+  fullhd: 'FullHD',
   hd: 'HD',
   sd: 'SD',
 };

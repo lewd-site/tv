@@ -147,22 +147,31 @@ class AnilibriaProvider implements ProviderInterface
       throw new NotFoundHttpException('Video not found');
     }
 
-    return [
+    $data = [
       'url'      => "https://www.anilibria.tv/public/iframe.php?id=$id#$index",
-      'type'     => 'html5',
+      'type'     => 'hls',
       'title'    => $data['names'][0] . ' – ' . $episode['title'],
       'duration' => $this->getM3u8Duration($m3u8Response->body()),
       'sources'  => [
         [
-          'url'   => strtok($episode['srcSd'], '?'),
+          'url'   => strtok($episode['sd'], '?'),
           'title' => 'sd',
         ],
         [
-          'url'     => strtok($episode['srcHd'], '?'),
+          'url'     => strtok($episode['hd'], '?'),
           'title'   => 'hd',
           'default' => true,
         ],
       ],
     ];
+
+    if (!empty($episode['fullhd'])) {
+      $data['sources'][] = [
+        'url'     => strtok($episode['fullhd'], '?'),
+        'title'   => 'fullhd',
+      ];
+    }
+
+    return $data;
   }
 }

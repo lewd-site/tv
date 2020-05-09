@@ -1,6 +1,6 @@
 import * as Hls from 'hls.js';
 import { Player } from './types';
-import { Video } from '../types';
+import { Video, VideoSource } from '../types';
 import { EventBus } from '../utils';
 
 export class HlsPlayer implements Player {
@@ -12,6 +12,7 @@ export class HlsPlayer implements Player {
   private hls: Hls | null = null;
 
   private video: Video | null = null;
+  private source: VideoSource | null = null;
 
   public constructor(elementId: string) {
     this.videoWrapper = document.getElementById(elementId);
@@ -42,7 +43,7 @@ export class HlsPlayer implements Player {
     setTimeout(() => {
       this.eventBus.emit('ready');
       this.eventBus.emit('subtitleTracksChanged', []);
-      this.eventBus.emit('qualityChanged', 'default');
+      this.eventBus.emit('qualityChanged', 'auto');
     });
   }
 
@@ -78,10 +79,15 @@ export class HlsPlayer implements Player {
     const paused = this.videoElement.paused;
     const time = this.videoElement.currentTime;
 
-    this.hls.loadSource(this.video.url || '');
-    this.hls.once('hlsManifestLoaded', () => {
-      this.eventBus.emit('qualityChanged', 'auto');
-    });
+    if (video.sources) {
+      this.source = video.sources.find(source => source.default) || null;
+      this.hls.loadSource(this.source?.url || '');
+      this.hls.once('hlsManifestLoaded', () => this.eventBus.emit('qualityChanged', this.source?.title || 'auto'));
+    } else {
+      this.source = null;
+      this.hls.loadSource(this.video.url || '');
+      this.hls.once('hlsManifestLoaded', () => this.eventBus.emit('qualityChanged', 'auto'));
+    }
 
     this.videoElement.currentTime = time;
 
@@ -163,7 +169,11 @@ export class HlsPlayer implements Player {
       return ['auto'];
     }
 
-    return ['auto', ...this.hls.levels.map(level => `${level.height}p`)].reverse();
+    if (this.video?.sources) {
+      return this.video.sources.map(source => source.title).reverse();
+    } else {
+      return ['auto', ...this.hls.levels.map(level => `${level.height}p`)].reverse();
+    }
   };
 
   public setQuality = (qualityLevel: string) => {
@@ -171,18 +181,42 @@ export class HlsPlayer implements Player {
       return;
     }
 
-    if (qualityLevel === 'auto') {
-      this.hls.currentLevel = -1;
-      this.eventBus.emit('qualityChanged', 'auto');
-    } else {
-      const index = this.hls.levels.findIndex(level => `${level.height}p` === qualityLevel);
-      this.hls.currentLevel = index;
+    if (this.video?.sources) {
+      if (qualityLevel === 'auto') {
+        this.source = this.video?.sources.find(source => source.default) || null;
+      } else {
+        this.source = this.video?.sources.find(source => source.title === qualityLevel) || null;
+      }
 
-      if (index === -1) {
+      if (this.videoElement) {
+        const paused = this.videoElement.paused;
+        const time = this.videoElement.currentTime;
+
+        this.hls.loadSource(this.source?.url || '');
+        this.hls.once('hlsManifestLoaded', () => this.eventBus.emit('qualityChanged', this.source?.title || 'auto'));
+
+        this.videoElement.currentTime = time;
+
+        if (paused) {
+          this.videoElement.pause();
+        } else {
+          this.videoElement.play();
+        }
+      }
+    } else {
+      if (qualityLevel === 'auto') {
+        this.hls.currentLevel = -1;
         this.eventBus.emit('qualityChanged', 'auto');
       } else {
-        const level = this.hls.levels[index];
-        this.eventBus.emit('qualityChanged', `${level.height}p`);
+        const index = this.hls.levels.findIndex(level => `${level.height}p` === qualityLevel);
+        this.hls.currentLevel = index;
+
+        if (index === -1) {
+          this.eventBus.emit('qualityChanged', 'auto');
+        } else {
+          const level = this.hls.levels[index];
+          this.eventBus.emit('qualityChanged', `${level.height}p`);
+        }
       }
     }
   };
