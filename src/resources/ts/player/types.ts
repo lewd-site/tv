@@ -13,7 +13,7 @@ export interface Player {
 
   readonly dispose: () => void;
 
-  readonly canPlayVideo: (url: string) => boolean;
+  readonly canPlayVideo: (video: Video) => boolean;
   readonly hasVideo: () => boolean;
   readonly getVideo: () => Video | null;
   readonly setVideo: (video: Video) => void;

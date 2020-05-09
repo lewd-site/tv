@@ -1,15 +1,17 @@
+import * as Hls from 'hls.js';
 import { Player } from './types';
-import { Video, VideoSource } from '../types';
+import { Video } from '../types';
 import { EventBus } from '../utils';
 
-export class Html5Player implements Player {
+export class HlsPlayer implements Player {
   public readonly eventBus: EventBus = new EventBus();
 
   private readonly videoWrapper: HTMLElement | null;
   private readonly videoElement: HTMLVideoElement | null;
 
+  private hls: Hls | null = null;
+
   private video: Video | null = null;
-  private source: VideoSource | null = null;
 
   public constructor(elementId: string) {
     this.videoWrapper = document.getElementById(elementId);
@@ -34,6 +36,9 @@ export class Html5Player implements Player {
       this.eventBus.emit('stateChanged', 'ended');
     });
 
+    this.hls = new Hls();
+    this.hls.attachMedia(this.videoElement);
+
     setTimeout(() => {
       this.eventBus.emit('ready');
       this.eventBus.emit('subtitleTracksChanged', []);
@@ -42,13 +47,16 @@ export class Html5Player implements Player {
   }
 
   public dispose = () => {
+    this.hls?.detachMedia();
+    this.hls?.destroy();
+
     this.videoElement?.remove();
     this.eventBus.unsubscribeAll();
   };
 
-  public static canPlayVideo = (video: Video) => video.type === 'html5';
+  public static canPlayVideo = (video: Video) => video.type === 'hls';
 
-  public canPlayVideo = (video: Video) => Html5Player.canPlayVideo(video);
+  public canPlayVideo = (video: Video) => HlsPlayer.canPlayVideo(video);
 
   public hasVideo = () => this.getVideo() !== null;
 
@@ -61,18 +69,19 @@ export class Html5Player implements Player {
   };
 
   public setVideo = (video: Video) => {
-    if (!this.videoElement) {
+    if (!this.videoElement || !this.hls) {
       return;
     }
 
     this.video = video;
-    this.source = video.sources.find(source => source.default) || null;
 
     const paused = this.videoElement.paused;
     const time = this.videoElement.currentTime;
 
-    this.videoElement.src = this.source?.url || '';
-    this.videoElement.load();
+    this.hls.loadSource(this.video.url || '');
+    this.hls.once('hlsManifestLoaded', () => {
+      this.eventBus.emit('qualityChanged', 'auto');
+    });
 
     this.videoElement.currentTime = time;
 
@@ -81,8 +90,6 @@ export class Html5Player implements Player {
     } else {
       this.videoElement.play();
     }
-
-    this.eventBus.emit('qualityChanged', this.source?.title || 'default');
   };
 
   public playVideo = () => {
@@ -152,34 +159,31 @@ export class Html5Player implements Player {
   public setSubtitleTrack = (languageCode: string) => { };
 
   public getAvailableQualityLevels = () => {
-    return this.video?.sources.map(source => source.title).reverse() || ['default'];
+    if (!this.hls || !this.hls.levels) {
+      return ['auto'];
+    }
+
+    return ['auto', ...this.hls.levels.map(level => `${level.height}p`)].reverse();
   };
 
   public setQuality = (qualityLevel: string) => {
-    if (!this.videoElement) {
+    if (!this.hls || !this.hls.levels) {
       return;
     }
 
-    if (qualityLevel === 'default') {
-      this.source = this.video?.sources.find(source => source.default) || null;
+    if (qualityLevel === 'auto') {
+      this.hls.currentLevel = -1;
+      this.eventBus.emit('qualityChanged', 'auto');
     } else {
-      this.source = this.video?.sources.find(source => source.title === qualityLevel) || null;
+      const index = this.hls.levels.findIndex(level => `${level.height}p` === qualityLevel);
+      this.hls.currentLevel = index;
+
+      if (index === -1) {
+        this.eventBus.emit('qualityChanged', 'auto');
+      } else {
+        const level = this.hls.levels[index];
+        this.eventBus.emit('qualityChanged', `${level.height}p`);
+      }
     }
-
-    const paused = this.videoElement.paused;
-    const time = this.videoElement.currentTime;
-
-    this.videoElement.src = this.source?.url || '';
-    this.videoElement.load();
-
-    this.videoElement.currentTime = time;
-
-    if (paused) {
-      this.videoElement.pause();
-    } else {
-      this.videoElement.play();
-    }
-
-    this.eventBus.emit('qualityChanged', this.source?.title || 'default');
   };
 }

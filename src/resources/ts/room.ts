@@ -2,7 +2,7 @@ import axios from './axios';
 import Chat from './components/Chat.vue';
 import PlayerOptions from './components/PlayerOptions.vue';
 import Playlist from './components/Playlist.vue';
-import { Player, PlayerState, SubtitleTrack, YouTubePlayer, Html5Player } from './player';
+import { Player, PlayerState, SubtitleTrack, YouTubePlayer, Html5Player, HlsPlayer } from './player';
 import { Room, ChatMessage, Video } from './types';
 import { eventBus, Observable } from './utils';
 
@@ -620,7 +620,7 @@ class PlayerViewModel {
             this.player.pauseVideo();
           }
         } else {
-          if (this.player.canPlayVideo(video.url)) {
+          if (this.player.canPlayVideo(video)) {
             this.player.setVideo(video);
             this.player.setVolume(this.volume.get());
             this.player.playVideo();
@@ -699,11 +699,14 @@ class PlayerViewModel {
           });
         };
 
-        if (YouTubePlayer.canPlayVideo(video.url)) {
+        if (YouTubePlayer.canPlayVideo(video)) {
           this.player = new YouTubePlayer();
           setupEvents();
-        } else if (Html5Player.canPlayVideo(video.url)) {
+        } else if (Html5Player.canPlayVideo(video)) {
           this.player = new Html5Player('video');
+          setupEvents();
+        } else if (HlsPlayer.canPlayVideo(video)) {
+          this.player = new HlsPlayer('video');
           setupEvents();
         }
       }

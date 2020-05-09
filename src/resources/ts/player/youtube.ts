@@ -83,11 +83,9 @@ export class YouTubePlayer implements Player {
     this.eventBus.unsubscribeAll();
   };
 
-  public static canPlayVideo = (url: string) => {
-    return youtubePatterns.some(pattern => url.match(pattern));
-  };
+  public static canPlayVideo = (video: Video) => video.type === 'youtube';
 
-  public canPlayVideo = (url: string) => YouTubePlayer.canPlayVideo(url);
+  public canPlayVideo = (video: Video) => YouTubePlayer.canPlayVideo(video);
 
   public hasVideo = () => this.getVideo() !== null;
 

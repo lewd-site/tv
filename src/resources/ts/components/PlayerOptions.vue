@@ -65,6 +65,8 @@
 import Vue from 'vue';
 
 const qualities = {
+  default: 'Авто',
+
   // YouTube
   highres: 'HD',
   large: '480p',

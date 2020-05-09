@@ -5,10 +5,12 @@ export interface VideoSource {
   readonly videoId: number;
 }
 
+export type VideoType = 'youtube' | 'html5' | 'hls';
+
 export interface Video {
   readonly id: number;
   readonly url: string;
-  readonly type: string;
+  readonly type: VideoType;
   readonly title: string;
   readonly startAt: string;
   readonly endAt: string;
