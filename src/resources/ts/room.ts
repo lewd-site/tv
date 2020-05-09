@@ -222,7 +222,7 @@ class AddVideoModalViewModel {
   private onSubmit = async (e: Event) => {
     e.preventDefault();
 
-    if (this.submittingForm || !this.urlInput) {
+    if (this.submittingForm || !this.modal || !this.urlInput) {
       return;
     }
 
@@ -230,14 +230,18 @@ class AddVideoModalViewModel {
     this.urlInput.disabled = true;
 
     try {
+      const episodeInputs = this.modal.querySelectorAll<HTMLInputElement>('[name="episodes[]"]:checked');
+      const episodes = [...episodeInputs].map(episodeInput => +episodeInput.value);
+
       const url = `/api/rooms/${window.room?.url}/videos`;
       const data = {
         url: this.urlInput?.value,
         start: this.enableStart?.checked ? this.startInput?.value : undefined,
         end: this.enableEnd?.checked ? this.endInput?.value : undefined,
+        episodes: episodes.length ? episodes : undefined,
       };
       const response = await axios.post(url, data, { withCredentials: true });
-      if (response.status === 201) {
+      if (response.status === 201 || response.status === 207) {
         this.close();
       } else {
         console.error(`Error: ${response.status} ${response.statusText}`);

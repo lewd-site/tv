@@ -52,6 +52,19 @@
     </div>
   </div>
 
+  <div class="add-video__episodes" hidden>
+    <div class="add-video__episodes-title">
+      <label class="add-video__episodes-all-field checkbox">
+        <input type="checkbox" class="add-video__episodes-all" />
+        <span class="checkbox-icon"></span>
+        <span class="add-video__episodes-all-label">Все серии</span>
+      </label>
+    </div>
+
+    <ul class="add-video__episodes-list">
+    </ul>
+  </div>
+
   <div class="add-video__footer">
     <button type="submit" class="button add-video__submit">Добавить</button>
     <a href="{{ route('rooms.show', ['room' => $room->url]) }}" class="button add-video__cancel" data-draggable="false">Отмена</a>

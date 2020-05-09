@@ -9,8 +9,13 @@ class AnilibriaProvider implements ProviderInterface
 {
   /** @var string[] */
   const URL_PATTERNS = [
+    // Single episode.
     '/^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/release\/([0-9a-z-]+)\.html#(\d+)/',
     '/^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/public\/iframe.php\?.*id=(\d+)#(\d+)/',
+
+    // Release.
+    '/^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/release\/([0-9a-z-]+)\.html/',
+    '/^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/public\/iframe.php\?.*id=(\d+)/',
   ];
 
   private static $data = [];
@@ -26,7 +31,7 @@ class AnilibriaProvider implements ProviderInterface
         static::$data[$url] = [
           'valid' => true,
           'id'    => $matches[1],
-          'index' => $matches[2],
+          'index' => $matches[2] ?? -1,
         ];
 
         return true;
@@ -73,17 +78,30 @@ class AnilibriaProvider implements ProviderInterface
     }
 
     $data = $responseData['data'];
-    $index = count($data['playlist']) - static::$data[$url]['index'];
-    if (!isset($data['playlist'][$index])) {
-      throw new NotFoundHttpException('Video not found');
+    $index = static::$data[$url]['index'];
+    if ($index === -1) {
+      $episodes = array_reverse(array_map(function ($item) {
+        return ['title' => $item['title']];
+      }, $data['playlist']));
+
+      return [
+        'title'        => $data['names'][0],
+        'thumbnailUrl' => 'https://www.anilibria.tv' . $data['poster'],
+        'episodes'     => $episodes,
+      ];
+    } else {
+      $playlistIndex = count($data['playlist']) - $index;
+      if (!isset($data['playlist'][$playlistIndex])) {
+        throw new NotFoundHttpException('Video not found');
+      }
+
+      $episode = $data['playlist'][$playlistIndex];
+
+      return [
+        'title'        => $data['names'][0] . ' – ' . $episode['title'],
+        'thumbnailUrl' => 'https://www.anilibria.tv' . $data['poster'],
+      ];
     }
-
-    $episode = $data['playlist'][$index];
-
-    return [
-      'title'        => $data['names'][0] . ' – ' . $episode['title'],
-      'thumbnailUrl' => 'https://www.anilibria.tv' . $data['poster'],
-    ];
   }
 
   private function getM3u8Duration(string $data): float

@@ -127,17 +127,39 @@ class RoomController extends Controller
   {
     $user = auth()->user();
     $input = $request->validated();
-    try {
-      $start = isset($input['start']) ? $this->timeToDuration($input['start']) : null;
-      $end = isset($input['end']) ? $this->timeToDuration($input['end']) : null;
-      $video = $this->videoService->create($room, $user, $input['url'], $start, $end);
-    } catch (BadRequestHttpException | NotFoundHttpException $e) {
-      return response()->json(['error' => $e->getMessage()], 400);
-    }
+    if (isset($input['episodes'])) {
+      $data = [];
+      foreach ($input['episodes'] as $episode) {
+        $url = $input['url'] . '#' . $episode;
+        try {
+          $video = $this->videoService->create($room, $user, $url, null, null);
+          $data[$url] = [
+            'status'   => 201,
+            'item'     => $video->getViewModel(),
+            'location' => route('rooms.show', ['room' => $room->url]),
+          ];
+        } catch (BadRequestHttpException | NotFoundHttpException $e) {
+          $data[$url] = [
+            'status' => 400,
+            'error'  => $e->getMessage(),
+          ];
+        }
+      }
 
-    return response()->json($video->getViewModel(), 201, [
-      'Location' => route('rooms.show', ['room' => $room->url]),
-    ]);
+      return response()->json(['data' => $data], 207);
+    } else {
+      try {
+        $start = isset($input['start']) ? $this->timeToDuration($input['start']) : null;
+        $end = isset($input['end']) ? $this->timeToDuration($input['end']) : null;
+        $video = $this->videoService->create($room, $user, $input['url'], $start, $end);
+      } catch (BadRequestHttpException | NotFoundHttpException $e) {
+        return response()->json(['error' => $e->getMessage()], 400);
+      }
+
+      return response()->json($video->getViewModel(), 201, [
+        'Location' => route('rooms.show', ['room' => $room->url]),
+      ]);
+    }
   }
 
   public function chatSubmit(CreateMessageRequest $request, Room $room)

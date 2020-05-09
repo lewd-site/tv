@@ -2,11 +2,16 @@ import Axios, { CancelTokenSource } from 'axios';
 import axios from './axios';
 import { eventBus, field, Field, Observable } from './utils';
 
+interface Episode {
+  readonly title: string;
+}
+
 interface VideoPreviewResponse {
   readonly title: string;
   readonly thumbnailUrl: string;
   readonly authorName?: string;
   readonly authorUrl?: string;
+  readonly episodes?: Episode[];
 }
 
 interface Placeholder {
@@ -27,6 +32,7 @@ interface Info {
   readonly title: string;
   readonly author: string;
   readonly authorUrl: string;
+  readonly episodes?: Episode[];
 }
 
 type State = Placeholder | Loading | Error | Info;
@@ -66,11 +72,16 @@ const youtubePatterns = [
 ];
 
 const anilibriaPatterns = [
+  /^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/release\/([0-9a-z-]+)\.html#(\d+)/,
+  /^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/public\/iframe.php\?.*id=(\d+)#(\d+)/,
+
   /^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/release\/([0-9a-z-]+)\.html/,
-  /^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/public\/iframe.php\?.*id=(\d+)#(\d+)/
+  /^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/public\/iframe.php\?.*id=(\d+)/,
 ];
 
 class AddVideoViewModel {
+  private readonly time: HTMLInputElement | null;
+
   private readonly enableStart: HTMLInputElement | null;
   private readonly enableEnd: HTMLInputElement | null;
 
@@ -84,6 +95,10 @@ class AddVideoViewModel {
   private readonly infoTitle: HTMLElement | null;
   private readonly infoAuthor: HTMLAnchorElement | null;
 
+  private readonly episodes: HTMLElement | null;
+  private readonly episodesAll: HTMLInputElement | null;
+  private readonly episodesList: HTMLElement | null;
+
   private readonly fields: { [key: string]: Field };
   private readonly state = new Observable<State>({ type: 'placeholder' });
 
@@ -93,8 +108,10 @@ class AddVideoViewModel {
       throw new Error('Add video form not found');
     }
 
-    this.enableStart = form.querySelector('.add-video__enable-start > input');
-    this.enableEnd = form.querySelector('.add-video__enable-end > input');
+    this.time = form.querySelector('.add-video__time');
+
+    this.enableStart = form.querySelector<HTMLInputElement>('.add-video__enable-start > input');
+    this.enableEnd = form.querySelector<HTMLInputElement>('.add-video__enable-end > input');
 
     this.start = form.querySelector('.add-video__start');
     this.end = form.querySelector('.add-video__end');
@@ -106,12 +123,17 @@ class AddVideoViewModel {
     this.infoTitle = form.querySelector('.add-video__info-title');
     this.infoAuthor = form.querySelector<HTMLAnchorElement>('.add-video__info-author');
 
+    this.episodes = form.querySelector('.add-video__episodes');
+    this.episodesAll = form.querySelector<HTMLInputElement>('.add-video__episodes-all');
+    this.episodesList = form.querySelector('.add-video__episodes-list');
+
     this.fields = ['url']
       .map(fieldName => field(form, fieldName))
       .reduce((fields, field) => ({ ...fields, [field.name]: field }), {});
 
     this.state.subscribe(this.onStateChange);
 
+    this.episodesAll?.addEventListener('input', this.onEpisodesAllChange);
     this.enableStart?.addEventListener('input', this.onEnableStartChange);
     this.enableEnd?.addEventListener('input', this.onEnableEndChange);
 
@@ -146,6 +168,20 @@ class AddVideoViewModel {
     });
   }
 
+  private onEpisodesAllChange = () => {
+    if (!this.episodesList || !this.episodesAll) {
+      return;
+    }
+
+    if (this.episodesAll.checked) {
+      const inputs = this.episodesList.querySelectorAll('input');
+      inputs.forEach(input => input.checked = true);
+    } else {
+      const inputs = this.episodesList.querySelectorAll('input');
+      inputs.forEach(input => input.checked = false);
+    }
+  };
+
   private onEnableStartChange = () => {
     if (!this.start) {
       return;
@@ -177,12 +213,14 @@ class AddVideoViewModel {
         this.placeholder?.removeAttribute('hidden');
         this.error?.setAttribute('hidden', 'true');
         this.info?.setAttribute('hidden', 'true');
+        this.episodes?.setAttribute('hidden', 'true');
         break;
 
       case 'error':
         this.placeholder?.setAttribute('hidden', 'true');
         this.error?.removeAttribute('hidden');
         this.info?.setAttribute('hidden', 'true');
+        this.episodes?.setAttribute('hidden', 'true');
 
         urlInput.classList.remove('loading');
 
@@ -212,6 +250,62 @@ class AddVideoViewModel {
         this.placeholder?.setAttribute('hidden', 'true');
         this.error?.setAttribute('hidden', 'true');
         this.info?.removeAttribute('hidden');
+
+        if (this.episodesList) {
+          this.episodesList.innerHTML = '';
+        }
+
+        if (state.episodes && state.episodes.length) {
+          this.time?.setAttribute('hidden', 'true');
+
+          if (this.enableStart) {
+            this.enableStart.checked = false;
+          }
+
+          if (this.enableEnd) {
+            this.enableEnd.checked = false;
+          }
+
+          this.onEnableStartChange();
+          this.onEnableEndChange();
+
+          this.episodes?.removeAttribute('hidden');
+
+          state.episodes.forEach((episode, index) => {
+            const checkbox = document.createElement('input');
+            checkbox.classList.add('add-video__episodes-checkbox');
+            checkbox.setAttribute('type', 'checkbox');
+            checkbox.setAttribute('name', 'episodes[]');
+            checkbox.setAttribute('value', (index + 1).toString());
+
+            const icon = document.createElement('span');
+            icon.classList.add('checkbox-icon');
+
+            const label = document.createElement('span');
+            label.classList.add('add-video__episodes-label');
+            label.textContent = episode.title;
+
+            const field = document.createElement('label');
+            field.classList.add('checkbox', 'add-video__episodes-field');
+            field.appendChild(checkbox);
+            field.appendChild(icon);
+            field.appendChild(label);
+
+            const listItem = document.createElement('li');
+            listItem.classList.add('add-video__episodes-item');
+            listItem.appendChild(field);
+
+            this.episodesList?.appendChild(listItem);
+          });
+        } else {
+          this.time?.removeAttribute('hidden');
+          this.episodes?.setAttribute('hidden', 'true');
+
+          if (this.episodesList) {
+            const inputs = this.episodesList.querySelectorAll('input');
+            inputs.forEach(input => input.checked = false);
+          }
+        }
         break;
     }
   };
@@ -242,6 +336,7 @@ class AddVideoViewModel {
         title: data.title,
         author: data.authorName || '',
         authorUrl: data.authorUrl || '',
+        episodes: data.episodes,
       });
     } catch (e) {
       if (!Axios.isCancel(e)) {

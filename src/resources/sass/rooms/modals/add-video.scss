@@ -5,6 +5,24 @@
 
   cursor: pointer;
 
+  overflow-y: auto;
+
+  scrollbar-color: #DFDFDF #3F3F3F;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: #3F3F3F;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #DFDFDF;
+  }
+
   &__inner {
     @extend %block;
 

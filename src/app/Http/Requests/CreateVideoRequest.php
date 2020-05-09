@@ -24,9 +24,10 @@ class CreateVideoRequest extends FormRequest
   public function rules()
   {
     return [
-      'url'   => 'required|max:2048',
-      'start' => 'sometimes|required|regex:/^(?:(?:\d+:)?[0-5]?\d:)?[0-5]?\d$/|max:10',
-      'end'   => 'sometimes|required|regex:/^(?:(?:\d+:)?[0-5]?\d:)?[0-5]?\d$/|max:10',
+      'url'      => 'required|max:2048',
+      'start'    => 'sometimes|required|regex:/^(?:(?:\d+:)?[0-5]?\d:)?[0-5]?\d$/|max:10',
+      'end'      => 'sometimes|required|regex:/^(?:(?:\d+:)?[0-5]?\d:)?[0-5]?\d$/|max:10',
+      'episodes' => 'sometimes|array',
     ];
   }
 }
