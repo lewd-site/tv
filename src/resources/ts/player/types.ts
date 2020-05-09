@@ -1,4 +1,5 @@
 import { EventBus } from '../utils';
+import { Video } from '../types';
 
 export type PlayerState = 'ended' | 'playing' | 'paused' | 'buffering';
 
@@ -14,8 +15,8 @@ export interface Player {
 
   readonly canPlayVideo: (url: string) => boolean;
   readonly hasVideo: () => boolean;
-  readonly getVideoUrl: () => string | null;
-  readonly setVideoUrl: (url: string, time?: number) => void;
+  readonly getVideo: () => Video | null;
+  readonly setVideo: (video: Video) => void;
 
   readonly playVideo: () => void;
   readonly pauseVideo: () => void;

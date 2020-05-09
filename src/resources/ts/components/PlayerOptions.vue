@@ -16,8 +16,7 @@
       </li>
 
       <li class="player-options__item">
-        <!--<button type="button" class="player-options__item-text player-options__item-text_right" @click="menu = 'quality'">-->
-        <button type="button" class="player-options__item-text" @click.prevent>
+        <button type="button" class="player-options__item-text player-options__item-text_right" @click="menu = 'quality'">
           <span>Качество</span>
           <span>{{ getQualityName(qualityLevelValue) }}</span>
         </button>
@@ -66,12 +65,17 @@
 import Vue from 'vue';
 
 const qualities = {
-  highres: 'Высокое разрешение',
+  // YouTube
+  highres: 'HD',
   large: '480p',
   medium: '360p',
   small: '240p',
   tiny: '144p',
-  auto: 'Автоматически',
+  auto: 'Авто',
+
+  // Anilibria.tv
+  hd: 'HD',
+  sd: 'SD',
 };
 
 function getQualityName(quality) {

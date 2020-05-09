@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * @property int $id
@@ -17,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $room_id
  * @property User $user
  * @property Room $room
+ * @property Collection $sources
  */
 class Video extends Model
 {
@@ -48,6 +50,11 @@ class Video extends Model
     return $this->belongsTo(Room::class, 'room_id', 'id');
   }
 
+  public function sources()
+  {
+    return $this->hasMany(VideoSource::class, 'video_id', 'id');
+  }
+
   protected $dates = [
     'start_at',
     'end_at',
@@ -65,6 +72,7 @@ class Video extends Model
       'offset'  => $this->offset,
       'userId'  => $this->user_id,
       'roomId'  => $this->room_id,
+      'sources' => $this->sources->map(fn ($source) => $source->getViewModel())->toArray(),
     ];
   }
 }

@@ -1,5 +1,6 @@
 import { Player } from './types';
 import { EventBus } from '../utils';
+import { Video } from '../types';
 
 const youtubePatterns = [
   /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([0-9A-Za-z_-]{10}[048AEIMQUYcgkosw])/,
@@ -21,6 +22,7 @@ export interface YouTubeSubtitleTrack {
 
 export class YouTubePlayer implements Player {
   private player: any = null;
+  private video: Video | null = null;
 
   public readonly eventBus: EventBus = new EventBus();
 
@@ -87,9 +89,9 @@ export class YouTubePlayer implements Player {
 
   public canPlayVideo = (url: string) => YouTubePlayer.canPlayVideo(url);
 
-  public hasVideo = () => this.getVideoUrl() !== null;
+  public hasVideo = () => this.getVideo() !== null;
 
-  public getVideoUrl = () => {
+  public getVideo = (): Video | null => {
     if (!this.player || !this.player.getVideoUrl) {
       return null;
     }
@@ -99,7 +101,7 @@ export class YouTubePlayer implements Player {
       return null;
     }
 
-    return videoUrl;
+    return this.video;
   };
 
   public static getVideoId = (url: string) => {
@@ -113,29 +115,27 @@ export class YouTubePlayer implements Player {
     return null;
   };
 
-  public setVideoUrl = (url: string, time: number | null = null) => {
+  public setVideo = (video: Video) => {
     if (!this.player || !this.player.loadVideoById) {
       return;
     }
 
-    const videoId = YouTubePlayer.getVideoId(url);
+    const videoId = YouTubePlayer.getVideoId(video.url);
     if (!videoId) {
       return;
     }
 
-    const currentUrl = this.getVideoUrl();
-    if (currentUrl) {
+    const currentVideo = this.getVideo();
+    if (currentVideo) {
+      const currentUrl = currentVideo.url;
       const currentVideoId = YouTubePlayer.getVideoId(currentUrl)
       if (currentVideoId === videoId) {
         return;
       }
     }
 
-    if (time) {
-      this.player.loadVideoById(videoId, time);
-    } else {
-      this.player.loadVideoById(videoId);
-    }
+    this.video = video;
+    this.player.loadVideoById(videoId);
   };
 
   public playVideo = () => {
@@ -270,32 +270,5 @@ export class YouTubePlayer implements Player {
     return this.player.getAvailableQualityLevels() as string[];
   };
 
-  public setQuality = (qualityLevel: string) => {
-    if (!this.player || !this.player.stopVideo) {
-      return;
-    }
-
-    const url = this.getVideoUrl();
-    if (!url) {
-      return;
-    }
-
-    const videoId = YouTubePlayer.getVideoId(url);
-    if (!videoId) {
-      return;
-    }
-
-    const time = this.getCurrentTime();
-
-    this.player.stopVideo();
-    this.player.clearVideo();
-
-    if (['auto', 'default'].indexOf(qualityLevel) !== -1) {
-      this.player.loadVideoById(videoId, time);
-      this.player.setPlaybackQuality('default');
-    } else {
-      this.player.loadVideoById(videoId, time, qualityLevel);
-      this.player.setPlaybackQuality(qualityLevel);
-    }
-  };
+  public setQuality = (qualityLevel: string) => { /* No-op */ };
 }

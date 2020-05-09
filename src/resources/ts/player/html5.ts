@@ -1,11 +1,19 @@
 import { Player } from './types';
+import { Video, VideoSource } from '../types';
 import { EventBus } from '../utils';
+
+const anilibriaPatterns = [
+  /^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/public\/iframe.php\?.*id=(\d+)#(\d+)/,
+];
 
 export class Html5Player implements Player {
   public readonly eventBus: EventBus = new EventBus();
 
   private readonly videoWrapper: HTMLElement | null;
-  private readonly video: HTMLVideoElement | null;
+  private readonly videoElement: HTMLVideoElement | null;
+
+  private video: Video | null = null;
+  private source: VideoSource | null = null;
 
   public constructor(elementId: string) {
     this.videoWrapper = document.getElementById(elementId);
@@ -13,20 +21,20 @@ export class Html5Player implements Player {
       throw new Error('Video wrapper not found');
     }
 
-    this.video = document.createElement('video');
-    this.video.style.width = '100%';
-    this.video.style.height = '100%';
-    this.videoWrapper.appendChild(this.video);
+    this.videoElement = document.createElement('video');
+    this.videoElement.style.width = '100%';
+    this.videoElement.style.height = '100%';
+    this.videoWrapper.appendChild(this.videoElement);
 
-    this.video.addEventListener('pause', () => {
+    this.videoElement.addEventListener('pause', () => {
       this.eventBus.emit('stateChanged', 'paused');
     });
 
-    this.video.addEventListener('play', () => {
+    this.videoElement.addEventListener('play', () => {
       this.eventBus.emit('stateChanged', 'playing');
     });
 
-    this.video.addEventListener('ended', () => {
+    this.videoElement.addEventListener('ended', () => {
       this.eventBus.emit('stateChanged', 'ended');
     });
 
@@ -38,75 +46,100 @@ export class Html5Player implements Player {
   }
 
   public dispose = () => {
-    this.video?.remove();
+    this.videoElement?.remove();
     this.eventBus.unsubscribeAll();
   };
 
   public static canPlayVideo = (url: string) => {
-    return url.endsWith('.webm') || url.endsWith('.mp4');
+    return anilibriaPatterns.some(pattern => url.match(pattern));
   };
 
   public canPlayVideo = (url: string) => Html5Player.canPlayVideo(url);
 
-  public hasVideo = () => this.getVideoUrl() !== null;
+  public hasVideo = () => this.getVideo() !== null;
 
-  public getVideoUrl = () => {
-    if (!this.video) {
+  public getVideo = (): Video | null => {
+    if (!this.videoElement) {
       return null;
     }
 
-    return this.video.src;
+    return this.video;
   };
 
-  public setVideoUrl = (url: string, time?: number) => {
-    if (!this.video) {
+  public setVideo = (video: Video) => {
+    if (!this.videoElement) {
       return;
     }
 
-    this.video.src = url;
+    this.video = video;
+    this.source = video.sources.find(source => source.default) || null;
 
-    if (typeof time !== 'undefined') {
-      this.video.currentTime = time;
+    const paused = this.videoElement.paused;
+    const time = this.videoElement.currentTime;
+
+    this.videoElement.src = this.source?.url || '';
+    this.videoElement.load();
+
+    this.videoElement.currentTime = time;
+
+    if (paused) {
+      this.videoElement.pause();
+    } else {
+      this.videoElement.play();
     }
+
+    this.eventBus.emit('qualityChanged', this.source?.title || 'default');
   };
 
   public playVideo = () => {
-    if (!this.video) {
+    if (!this.videoElement) {
       return;
     }
 
-    this.video.play();
+    this.videoElement.play();
   };
 
   public pauseVideo = () => {
-    if (!this.video) {
+    if (!this.videoElement) {
       return;
     }
 
-    this.video.pause();
+    this.videoElement.pause();
   };
 
-  public getCurrentTime = () => this.video?.currentTime || 0;
+  public getCurrentTime = () => this.videoElement?.currentTime || 0;
 
   public setCurrentTime = (time: number, allowSeekAhead?: boolean) => {
-    if (!this.video) {
+    if (!this.videoElement) {
       return;
     }
 
-    this.video.currentTime = time;
+    this.videoElement.currentTime = time;
   };
 
-  public getDuration = () => this.video?.duration || 0;
+  public getDuration = () => this.videoElement?.duration || 0;
 
-  /** @todo */
-  public getVideoLoadedFraction = () => 0;
+  public getVideoLoadedFraction = () => {
+    if (!this.videoElement || !this.videoElement.duration) {
+      return 0;
+    }
+
+    const { buffered, currentTime, duration } = this.videoElement;
+    for (let i = 0; i < buffered.length; ++i) {
+      if (buffered.start(i) <= currentTime && currentTime < buffered.end(i)) {
+        return buffered.end(i) / duration;
+      }
+    }
+
+    return 0;
+  };
 
   public setVolume = (volume: number) => {
-    if (!this.video) {
+    if (!this.videoElement) {
       return;
     }
 
-    this.video.volume = volume / 100;
+    this.videoElement.volume = volume / 100;
   };
 
   /** @todo */
@@ -125,8 +158,36 @@ export class Html5Player implements Player {
   public setSubtitleTrack = (languageCode: string) => { };
 
   /** @todo */
-  public getAvailableQualityLevels = () => ['default'];
+  public getAvailableQualityLevels = () => {
+    return this.video?.sources.map(source => source.title) || ['default'];
+  };
 
   /** @todo */
-  public setQuality = (qualityLevel: string) => { };
+  public setQuality = (qualityLevel: string) => {
+    if (!this.videoElement) {
+      return;
+    }
+
+    if (qualityLevel === 'default') {
+      this.source = this.video?.sources.find(source => source.default) || null;
+    } else {
+      this.source = this.video?.sources.find(source => source.title === qualityLevel) || null;
+    }
+
+    const paused = this.videoElement.paused;
+    const time = this.videoElement.currentTime;
+
+    this.videoElement.src = this.source?.url || '';
+    this.videoElement.load();
+
+    this.videoElement.currentTime = time;
+
+    if (paused) {
+      this.videoElement.pause();
+    } else {
+      this.videoElement.play();
+    }
+
+    this.eventBus.emit('qualityChanged', this.source?.title || 'default');
+  };
 }

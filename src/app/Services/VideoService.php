@@ -7,6 +7,7 @@ use App\Events\VideoDeletedEvent;
 use App\Models\Room;
 use App\Models\User;
 use App\Models\Video;
+use App\Models\VideoSource;
 use App\Services\Video\AnilibriaProvider;
 use App\Services\Video\ProviderInterface;
 use App\Services\Video\YouTubeProvider;
@@ -105,6 +106,7 @@ class VideoService
     $startAt = new Carbon($playlistEndAt);
     $endAt = $startAt->clone()->addSeconds($data['duration']);
 
+    /** @var Video */
     $video = Video::create([
       'url'      => $data['url'],
       'type'     => $data['type'],
@@ -115,6 +117,17 @@ class VideoService
       'room_id'  => $room->id,
       'user_id'  => $user->id,
     ]);
+
+    if (!empty($data['sources'])) {
+      foreach ($data['sources'] as $source) {
+        VideoSource::create([
+          'url'      => $source['url'],
+          'title'    => $source['title'],
+          'default'  => $source['default'] ?? false,
+          'video_id' => $video->id,
+        ]);
+      }
+    }
 
     App::terminating(fn () => event(new VideoCreatedEvent($video)));
 

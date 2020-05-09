@@ -604,27 +604,24 @@ class PlayerViewModel {
     });
   }
 
-  private getCurrentVideoUrl = async () => {
-    const video = await this.room.getCurrentVideo();
-    if (!video) {
-      return null;
-    }
-
-    return video.url;
-  };
-
   private hideControls = () => this.controls?.setAttribute('hidden', 'true');
   private showControls = () => this.controls?.removeAttribute('hidden');
 
   private syncVideo = async () => {
-    const videoUrl = await this.getCurrentVideoUrl();
+    const video = await this.room.getCurrentVideo();
 
     if (this.player) {
-      if (videoUrl) {
-        const currentVideoUrl = this.player.getVideoUrl();
-        if (currentVideoUrl !== videoUrl) {
-          if (this.player.canPlayVideo(videoUrl)) {
-            this.player.setVideoUrl(videoUrl);
+      if (video) {
+        const currentVideo = this.player.getVideo();
+        if (currentVideo === video) {
+          if (this.isPlaying) {
+            this.player.playVideo();
+          } else {
+            this.player.pauseVideo();
+          }
+        } else {
+          if (this.player.canPlayVideo(video.url)) {
+            this.player.setVideo(video);
             this.player.setVolume(this.volume.get());
             this.player.playVideo();
           } else {
@@ -641,7 +638,7 @@ class PlayerViewModel {
         this.hideControls();
       }
     } else {
-      if (videoUrl) {
+      if (video) {
         const setupEvents = () => {
           if (!this.player) {
             return;
@@ -667,6 +664,13 @@ class PlayerViewModel {
           });
 
           this.player.eventBus.subscribe('qualityChanged', (qualityLevel: string) => {
+            const qualityLevels = this.player?.getAvailableQualityLevels();
+            if (qualityLevels && qualityLevels.length) {
+              this.qualityLevels.set(qualityLevels);
+            } else {
+              this.qualityLevels.set(['auto']);
+            }
+
             this.qualityLevel.set(qualityLevel);
           });
 
@@ -695,10 +699,10 @@ class PlayerViewModel {
           });
         };
 
-        if (YouTubePlayer.canPlayVideo(videoUrl)) {
+        if (YouTubePlayer.canPlayVideo(video.url)) {
           this.player = new YouTubePlayer();
           setupEvents();
-        } else if (Html5Player.canPlayVideo(videoUrl)) {
+        } else if (Html5Player.canPlayVideo(video.url)) {
           this.player = new Html5Player('video');
           setupEvents();
         }

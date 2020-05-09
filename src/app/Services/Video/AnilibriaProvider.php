@@ -101,10 +101,13 @@ class AnilibriaProvider implements ProviderInterface
       throw new NotFoundHttpException('Video not found');
     }
 
+    $id = static::$data[$url]['id'];
+    $index = static::$data[$url]['index'];
+
     $serviceUrl = 'https://www.anilibria.tv/public/api/index.php';
     $response = Http::asForm()->post($serviceUrl, [
       'query' => 'release',
-      'id'    => static::$data[$url]['id'],
+      'id'    => $id,
     ]);
 
     if (!$response->ok()) {
@@ -117,22 +120,33 @@ class AnilibriaProvider implements ProviderInterface
     }
 
     $data = $responseData['data'];
-    $index = count($data['playlist']) - static::$data[$url]['index'];
-    if (!isset($data['playlist'][$index])) {
+    $playlistIndex = count($data['playlist']) - $index;
+    if (!isset($data['playlist'][$playlistIndex])) {
       throw new NotFoundHttpException('Video not found');
     }
 
-    $episode = $data['playlist'][$index];
+    $episode = $data['playlist'][$playlistIndex];
     $m3u8Response = Http::get($episode['hd']);
     if (!$m3u8Response->ok()) {
       throw new NotFoundHttpException('Video not found');
     }
 
     return [
-      'url'      => strtok($episode['srcHd'], '?'),
+      'url'      => "https://www.anilibria.tv/public/iframe.php?id=$id#$index",
       'type'     => 'html5',
       'title'    => $data['names'][0] . ' – ' . $episode['title'],
       'duration' => $this->getM3u8Duration($m3u8Response->body()),
+      'sources'  => [
+        [
+          'url'   => strtok($episode['srcSd'], '?'),
+          'title' => 'sd',
+        ],
+        [
+          'url'     => strtok($episode['srcHd'], '?'),
+          'title'   => 'hd',
+          'default' => true,
+        ],
+      ],
     ];
   }
 }
