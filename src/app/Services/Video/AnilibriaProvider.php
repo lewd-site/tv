@@ -9,6 +9,7 @@ class AnilibriaProvider implements ProviderInterface
 {
   /** @var string[] */
   const URL_PATTERNS = [
+    '/^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/release\/([0-9a-z-]+)\.html#(\d+)/',
     '/^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/public\/iframe.php\?.*id=(\d+)#(\d+)/',
   ];
 
@@ -51,10 +52,16 @@ class AnilibriaProvider implements ProviderInterface
     }
 
     $serviceUrl = 'https://www.anilibria.tv/public/api/index.php';
-    $response = Http::asForm()->post($serviceUrl, [
-      'query' => 'release',
-      'id'    => static::$data[$url]['id'],
-    ]);
+    $data = ['query' => 'release'];
+
+    $id = static::$data[$url]['id'];
+    if (is_numeric($id)) {
+      $data['id'] = $id;
+    } else {
+      $data['code'] = $id;
+    }
+
+    $response = Http::asForm()->post($serviceUrl, $data);
 
     if (!$response->ok()) {
       throw new NotFoundHttpException('Video not found');
@@ -105,11 +112,16 @@ class AnilibriaProvider implements ProviderInterface
     $index = static::$data[$url]['index'];
 
     $serviceUrl = 'https://www.anilibria.tv/public/api/index.php';
-    $response = Http::asForm()->post($serviceUrl, [
-      'query' => 'release',
-      'id'    => $id,
-    ]);
+    $data = ['query' => 'release'];
 
+    $id = static::$data[$url]['id'];
+    if (is_numeric($id)) {
+      $data['id'] = $id;
+    } else {
+      $data['code'] = $id;
+    }
+
+    $response = Http::asForm()->post($serviceUrl, $data);
     if (!$response->ok()) {
       throw new NotFoundHttpException('Video not found');
     }
@@ -117,6 +129,10 @@ class AnilibriaProvider implements ProviderInterface
     $responseData = $response->json();
     if (empty($responseData['data'])) {
       throw new NotFoundHttpException('Video not found');
+    }
+
+    if (!is_numeric($id)) {
+      $id = $responseData['data']['id'];
     }
 
     $data = $responseData['data'];

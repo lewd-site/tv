@@ -66,6 +66,7 @@ const youtubePatterns = [
 ];
 
 const anilibriaPatterns = [
+  /^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/release\/([0-9a-z-]+)\.html/,
   /^(?:https?:\/\/)?(?:www\.)?anilibria\.tv\/public\/iframe.php\?.*id=(\d+)#(\d+)/
 ];
 
