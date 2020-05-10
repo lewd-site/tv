@@ -14,9 +14,7 @@
   }
 
   &__button {
-    @extend %button, %button_large, %button_secondary;
-
-    border-width: 2px;
+    @extend %button, %button_large, %button_animated;
 
     font-size: 24px;
     font-weight: bold;

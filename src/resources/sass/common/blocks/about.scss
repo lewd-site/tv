@@ -11,7 +11,7 @@
   }
 
   &__button {
-    @extend %button, %button_primary;
+    @extend %button, %button_animated;
 
     border-radius: 27px;
 
@@ -19,5 +19,6 @@
     font-weight: 500;
 
     height: 54px;
+    width: 174px;
   }
 }

@@ -66,8 +66,13 @@
   </div>
 
   <div class="add-video__footer">
-    <button type="submit" class="button add-video__submit">Добавить</button>
-    <a href="{{ route('rooms.show', ['room' => $room->url]) }}" class="button add-video__cancel" data-draggable="false">Отмена</a>
+    <button type="submit" class="add-video__submit">
+      <span>Добавить</span>
+    </button>
+
+    <a href="{{ route('rooms.show', ['room' => $room->url]) }}" class="add-video__cancel" data-draggable="false">
+      <span>Отмена</span>
+    </a>
   </div>
 
   <a class="add-video__close" href="{{ route('rooms.show', ['room' => $room->url]) }}" data-draggable="false"></a>

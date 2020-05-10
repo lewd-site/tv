@@ -23,8 +23,10 @@
     ])
   </div>
 
-  <div class="login__submit">
-    <button type="submit" class="button button_large button_secondary">Войти</button>
+  <div>
+    <button type="submit" class="login__submit">
+      <span>Войти</span>
+    </button>
   </div>
 
   <a class="login__close" href="{{ route('rooms.list') }}" data-draggable="false">

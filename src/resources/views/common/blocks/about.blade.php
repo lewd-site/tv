@@ -15,4 +15,6 @@
   Для нефинансовой поддержки свяжитесь с администрацией сайта.
 </p>
 
-<a class="about__button" href="{{ route('common.donate') }}" data-draggable="false">Donate</a>
+<a class="about__button" href="{{ route('common.donate') }}" data-draggable="false">
+  <span>Donate</span>
+</a>

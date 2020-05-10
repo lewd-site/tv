@@ -239,7 +239,8 @@
 
   &__submit,
   &__cancel {
-    border: 2px solid #E3833D;
+    @extend %button, %button_animated;
+
     border-radius: 19px;
 
     font-size: 16px;

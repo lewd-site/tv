@@ -18,8 +18,13 @@
     </section>
 
     <div class="create-room__buttons">
-      <button class="create-room__submit" type="submit">Создать</button>
-      <a class="create-room__cancel" href="{{ route('common.landing') }}" data-draggable="false">Отмена</a>
+      <button class="create-room__submit" type="submit">
+        <span>Создать</span>
+      </button>
+
+      <a class="create-room__cancel" href="{{ route('common.landing') }}" data-draggable="false">
+        <span>Отмена</span>
+      </a>
     </div>
   </section>
 

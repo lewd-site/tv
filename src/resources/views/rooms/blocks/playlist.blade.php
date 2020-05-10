@@ -1,6 +1,8 @@
 <div class="room-playlist__inner">
   @if (auth()->check() && auth()->id() === $room->user_id)
-  <a href="{{ route('rooms.addVideo', ['room' => $room->url]) }}" class="room-playlist__add" data-draggable="false">Добавить видео</a>
+  <a href="{{ route('rooms.addVideo', ['room' => $room->url]) }}" class="room-playlist__add" data-draggable="false">
+    <span>Добавить видео</span>
+  </a>
   @endif
 
   <h2 class="room-playlist__title">Плейлист</h2>

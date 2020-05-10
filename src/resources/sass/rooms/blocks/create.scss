@@ -117,7 +117,12 @@
 
   &__submit,
   &__cancel {
-    @extend %button, %button_secondary, %button_large;
+    @extend %button, %button_large, %button_animated;
+
+    border-width: 1px;
+
+    width: 194px;
+    padding: 0;
   }
 
   &__right {

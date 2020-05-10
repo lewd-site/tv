@@ -32,6 +32,14 @@
     user-select: none;
   }
 
+  &__submit {
+    @extend %button, %button_large, %button_animated;
+
+    border-width: 1px;
+
+    width: 182px;
+  }
+
   &__d-1 {
     position: absolute;
     top: -42px;

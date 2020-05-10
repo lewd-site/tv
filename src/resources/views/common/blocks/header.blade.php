@@ -38,8 +38,13 @@
       </ul>
     </div>
     @else
-    <a class="header__button" href="{{ route('auth.login') }}" data-draggable="false">Вход</a>
-    <a class="header__button" href="{{ route('auth.register') }}" data-draggable="false">Регистрация</a>
+    <a class="header__login" href="{{ route('auth.login') }}" data-draggable="false">
+      <span>Вход</span>
+    </a>
+
+    <a class="header__register" href="{{ route('auth.register') }}" data-draggable="false">
+      <span>Регистрация</span>
+    </a>
     @endif
   </div>
 </nav>

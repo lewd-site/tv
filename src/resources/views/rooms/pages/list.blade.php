@@ -5,11 +5,13 @@
 @section('content')
 <main class="layout__main room-list-page">
   <section class="room-list-page__room-list room-list">
-  @include('rooms.blocks.list')
+    @include('rooms.blocks.list')
   </section>
 
   <div class="room-list-page__buttons">
-    <a class="room-list-page__button" href="{{ route('rooms.create') }}">Создать комнату</a>
+    <a class="room-list-page__button" href="{{ route('rooms.create') }}">
+      <span>Создать комнату</span>
+    </a>
   </div>
 </main>
 @endsection

@@ -39,8 +39,11 @@
     align-items: center;
   }
 
-  &__button {
-    @extend %button;
+  &__login,
+  &__register {
+    @extend %button, %button_animated;
+
+    border: 1px solid #ffffff;
 
     height: 36px;
     padding: 0 24px;
@@ -51,6 +54,14 @@
     &:not(:last-child) {
       margin-right: 32px;
     }
+  }
+
+  &__login {
+    width: 89px;
+  }
+
+  &__register {
+    width: 159px;
   }
 
   &__add {

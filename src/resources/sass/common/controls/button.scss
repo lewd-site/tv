@@ -4,7 +4,9 @@
   justify-content: center;
   align-items: center;
 
-  border: 1px solid $white;
+  box-sizing: border-box;
+
+  border: 2px solid #E3833E;
   border-radius: 20px;
 
   height: 46px;
@@ -17,15 +19,6 @@
   cursor: pointer;
   user-select: none;
 
-  &_primary {
-    border: 0;
-    background: linear-gradient(186deg, #E3833E 28%, #942FD1 100%);
-  }
-
-  &_secondary {
-    border-color: #E3833E;
-  }
-
   &_large {
     border-radius: 50px;
 
@@ -33,5 +26,40 @@
     padding: 0 65px;
 
     font-size: 16px;
+  }
+
+  &_animated {
+    position: relative;
+
+    overflow: hidden;
+
+    &::after {
+      content: '';
+
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+
+      display: block;
+
+      background: linear-gradient(186deg, #E3833E 28%, #942FD1 100%);
+
+      opacity: 0;
+      transition: opacity 140ms ease-out;
+    }
+
+    & > span {
+      z-index: 1;
+    }
+
+    &:hover {
+      border: 0;
+
+      &::after {
+        opacity: 1;
+      }
+    }
   }
 }
