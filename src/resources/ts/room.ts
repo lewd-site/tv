@@ -953,7 +953,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const playlistViewModel = new Playlist({ propsData: { videos: room.videos } });
   playlistViewModel.$mount('.room-playlist__list', true);
 
-  const chatViewModel = new Chat({ propsData: { messages: room.messages } });
+  const popupOpen = new Observable(false);
+
+  const chatViewModel = new Chat({
+    propsData: {
+      messages: room.messages,
+      chatPopupOpen: popupOpen,
+    },
+  });
   chatViewModel.$mount('.chat__main', true);
 
   const addVideoModalViewModel = new AddVideoModalViewModel();
@@ -985,6 +992,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('.chat__count not found');
   }
 
+  room.getCurrentVideo(); // Trigger update.
+
   // Handle chat form submit.
 
   const chatForm = document.querySelector<HTMLFormElement>('.chat__form');
@@ -1015,5 +1024,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  room.getCurrentVideo(); // Trigger update.
+  const chatInner = document.querySelector<HTMLElement>('.chat__inner');
+  if (!chatInner) {
+    return console.warn('.chat__inner not found');
+  }
+
+  const chatMain = document.querySelector<HTMLElement>('.chat__main');
+  if (!chatMain) {
+    return console.warn('.chat__main not found');
+  }
+
+  const chatPopup = document.querySelector<HTMLElement>('.chat__popup-list');
+  if (!chatPopup) {
+    return console.warn('.chat__popup-list not found');
+  }
+
+  chatPopup.addEventListener('click', e => e.stopPropagation());
+
+  eventBus.subscribe('chatNameClick', (event: MouseEvent, message: ChatMessage) => {
+    const { top, left } = chatInner.getBoundingClientRect();
+    chatPopup.style.left = `${event.clientX - left}px`;
+    chatPopup.style.top = `${event.clientY - top}px`;
+
+    const link = document.querySelector('.chat__popup-link');
+    link?.setAttribute('href', `${message.userUrl}`);
+
+    const image = document.querySelector('.chat__avatar-image');
+    image?.setAttribute('src', `${message.userAvatar}`);
+
+    chatPopup.removeAttribute('hidden');
+    popupOpen.set(true);
+  });
+
+  document.addEventListener('click', () => {
+    chatPopup.setAttribute('hidden', 'true');
+    popupOpen.set(false);
+  });
+
+  let prevScrollTop = chatMain.scrollTop;
+  chatMain.addEventListener('scroll', (e: Event) => {
+    if (popupOpen.get()) {
+      chatMain.scrollTop = prevScrollTop;
+      e.preventDefault();
+    }
+  });
+
+  popupOpen.subscribe(popupOpen => {
+    if (popupOpen) {
+      prevScrollTop = chatMain.scrollTop;
+      chatMain.style.pointerEvents = 'none';
+    } else {
+      chatMain.style.pointerEvents = 'initial';
+    }
+  });
+
+  eventBus.subscribe('chatMentionClick', (event: MouseEvent, message: ChatMessage) => {
+    console.log(message);
+  });
 });

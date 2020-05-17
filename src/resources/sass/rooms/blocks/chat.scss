@@ -1,5 +1,7 @@
 .chat {
   &__inner {
+    position: relative;
+
     display: flex;
     flex-flow: column nowrap;
 
@@ -80,26 +82,8 @@
     margin-left: 8px;
 
     &:not(:last-child) {
-      margin-bottom: 16px;
+      margin-bottom: 24px;
     }
-  }
-
-  &__avatar {
-    margin-top: 4px;
-  }
-
-  &__avatar-image {
-    display: block;
-
-    margin-right: 8px;
-
-    width: 24px;
-    height: 24px;
-
-    border-radius: 2px;
-
-    pointer-events: none;
-    user-select: none;
   }
 
   &__message {
@@ -111,10 +95,16 @@
   }
 
   &__name {
+    color: #E3833D;
     font-weight: 500;
+    cursor: pointer;
 
     &::after {
       content: ':';
+    }
+
+    &:hover {
+      color: #EB6503;
     }
   }
 
@@ -122,6 +112,8 @@
     display: flex;
     flex-flow: column nowrap;
     align-items: flex-end;
+
+    width: 60px;
 
     margin-left: 8px;
   }
@@ -133,17 +125,21 @@
 
     color: #828282;
 
-    font-weight: 500;
+    font-weight: 300;
     font-size: 16px;
 
-    margin-top: 2px;
+    margin-top: 4px;
 
     padding: 0;
 
-    margin-bottom: 8px;
-
     cursor: pointer;
     user-select: none;
+
+    display: none;
+
+    &:hover {
+      color: #9631CD;
+    }
   }
 
   &__message-time {
@@ -152,6 +148,16 @@
     font-family: 'Roboto', sans-serif;
     font-size: 12px;
     font-weight: 300;
+
+    margin-top: 4px;
+  }
+
+  &__item:hover &__message-mention {
+    display: block;
+  }
+
+  &__item:hover &__message-time {
+    display: none;
   }
 
   &__footer {
@@ -166,5 +172,74 @@
     height: 42px;
 
     padding: 0 6px;
+  }
+
+  &__popup-list {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    @extend %block;
+
+    background: $gray-15;
+
+    box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.35);
+
+    width: 165px;
+
+    overflow: hidden;
+
+    padding: 0;
+
+    color: #DFDFDF;
+    font-size: 12px;
+    font-weight: normal;
+
+    z-index: 1;
+  }
+
+  &__popup-item {
+    width: 100%;
+
+    &:hover {
+      background: $gray-18;
+    }
+  }
+
+  &__popup-link {
+    @extend %row;
+
+    align-items: center;
+
+    padding: 16px;
+  }
+
+  &__avatar {
+    position: relative;
+
+    background: #9631CD;
+
+    border-radius: 2px;
+
+    margin: 2px 16px 0 2px;
+
+    width: 24px;
+    height: 24px;
+  }
+
+  &__avatar-image {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+
+    display: block;
+
+    border-radius: 2px;
+
+    width: 24px;
+    height: 24px;
+
+    pointer-events: none;
+    user-select: none;
   }
 }

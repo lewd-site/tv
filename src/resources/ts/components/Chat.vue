@@ -1,23 +1,19 @@
 <template>
   <div class="chat__main" ref="main">
-    <ul class="chat__list">
+    <ul class="chat__list" ref="list">
       <template v-for="(messages, date) in messagesByDate">
         <li class="chat__date-separator" :key="date">
           {{ formatDate(date) }}
         </li>
 
         <li class="chat__item" v-for="message of messages" :key="message.id">
-          <div class="chat__avatar">
-            <img class="chat__avatar-image" :src="message.userAvatar" data-draggable="false" />
-          </div>
-
           <div class="chat__message">
-            <a class="chat__name" :href="message.userUrl">{{ message.userName }}</a>
+            <span class="chat__name" @click.stop="nameClick($event, message)">{{ message.userName }}</span>
             <span class="chat__message-text">{{ message.message }}</span>
           </div>
 
           <div class="chat__message-right">
-            <button type="button" class="chat__message-mention" @click="mention(message)">@</button>
+            <button type="button" class="chat__message-mention" @click="mentionClick($event, message)">@</button>
             <time class="chat__message-time" :datetime="message.createdAt">{{ formatTime(message.createdAt) }}</time>
           </div>
         </li>
@@ -34,17 +30,27 @@ export default Vue.extend({
   name: 'Chat',
   props: {
     messages: { required: true },
+    chatPopupOpen: { required: true },
   },
   data() {
     return {
       first: true,
       messagesValue: [],
+      chatPopupOpenValue: false,
     };
   },
   beforeMount() {
-    this.unsubscribe = this.messages.subscribe(messages => {
+    this.unsubscribeMessages = this.messages.subscribe(messages => {
       this.messagesValue = [...messages];
-      this.$nextTick(() => this.scrollToBottom());
+      this.$nextTick(() => {
+        if (!this.chatPopupOpenValue) {
+          this.scrollToBottom();
+        }
+      },);
+    });
+
+    this.unsubscribeChatPopupOpen = this.chatPopupOpen.subscribe(chatPopupOpen => {
+      this.chatPopupOpenValue = chatPopupOpen;
     });
 
     this.messagesValue = this.messages.get();
@@ -54,7 +60,8 @@ export default Vue.extend({
     this.scrollToBottom();
   },
   beforeDestroy() {
-    this.unsubscribe();
+    this.unsubscribeMessages();
+    this.unsubscribeChatPopupOpen();
   },
   computed: {
     messagesByDate() {
@@ -129,8 +136,11 @@ export default Vue.extend({
 
       return `${hStr}:${mStr}`;
     },
-    mention(message) {
-      eventBus.emit('mention', message);
+    nameClick(event, message) {
+      eventBus.emit('chatNameClick', event, message);
+    },
+    mentionClick(event, message) {
+      eventBus.emit('chatMentionClick', event, message);
     },
   },
 });

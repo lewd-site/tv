@@ -28,13 +28,8 @@
       @spaceless
       @foreach ($dateMessages as $message)
       <li class="chat__item">
-        <div class="chat__avatar">
-          <img class="chat__avatar-image" src="https://www.gravatar.com/avatar/{{ md5(strtolower($message->user->email)) }}.jpg?s=24&d=mp" data-draggable="false" />
-        </div>
-        @endspaceless
-        @spaceless
         <div class="chat__message">
-          <a class="chat__name" href="{{ route('users.show', ['user' => $message->user_id]) }}">{{ $message->user->name }}</a>
+          <span class="chat__name">{{ $message->user->name }}</span>
           @endspaceless
           @spaceless
           <span class="chat__message-text">{{ $message->message }}</span>
@@ -63,4 +58,16 @@
       <button type="submit" hidden>Отправить</button>
     </form>
   </div>
+
+  <ul class="chat__popup-list" hidden>
+    <li class="chat__popup-item">
+      <a class="chat__popup-link" href="#" target="_blank">
+        <div class="chat__avatar">
+          <img class="chat__avatar-image" data-draggable="false" />
+        </div>
+
+        <span>Профиль</span>
+      </a>
+    </li>
+  </ul>
 </div>
