@@ -37,6 +37,7 @@ Route::name('common.')->group(function () {
   Route::get('about', 'CommonController@about')->name('about');
   Route::get('contact', 'CommonController@contact')->name('contact');
   Route::get('donate', 'CommonController@donate')->name('donate');
+  Route::get('faq', 'CommonController@faq')->name('faq');
 });
 
 Route::name('auth.')->group(function () {

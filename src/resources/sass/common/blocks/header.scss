@@ -22,8 +22,10 @@
   }
 
   &__center {
+    @extend %row;
+
     & > :not(:last-child) {
-      margin-right: 22px;
+      margin-right: 64px;
     }
   }
 
@@ -43,7 +45,7 @@
   &__register {
     @extend %button, %button_animated;
 
-    border: 1px solid #ffffff;
+    border: 2px solid #ffffff;
 
     height: 36px;
     padding: 0 24px;

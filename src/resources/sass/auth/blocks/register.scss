@@ -41,8 +41,6 @@
   &__submit {
     @extend %button, %button_large, %button_animated;
 
-    border-width: 1px;
-
     width: 292px;
   }
 

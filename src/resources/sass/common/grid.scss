@@ -24,8 +24,8 @@
   flex-flow: row nowrap;
 }
 
-@for $i from 1 through 10 {
-  %col-#{$i}0 {
-    flex: 0 0 ($i * 10%);
+@for $i from 1 through 20 {
+  %col-#{$i * 5} {
+    flex: 0 0 ($i * 5%);
   }
 }

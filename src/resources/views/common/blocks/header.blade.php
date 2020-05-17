@@ -9,6 +9,7 @@
     <a class="header__link" href="{{ route('rooms.list') }}">Комнаты</a>
     <a class="header__link" href="{{ route('common.about') }}">О сайте</a>
     <a class="header__link" href="{{ route('common.contact') }}">Контакты</a>
+    <a class="header__link" href="{{ route('common.faq') }}">FAQ</a>
   </div>
 
   <div class="header__right">

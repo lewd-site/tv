@@ -28,4 +28,9 @@ class CommonController extends Controller
   {
     return view('common.pages.donate');
   }
+
+  public function faq()
+  {
+    return view('common.pages.faq');
+  }
 }

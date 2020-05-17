@@ -1,0 +1,43 @@
+.faq {
+  @extend %container, %row;
+
+  padding: 64px;
+
+  &__main {
+    flex: 1;
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: normal;
+
+    margin-bottom: 16px;
+  }
+
+  &__text {
+    font-size: 16px;
+    font-weight: normal;
+
+    margin-bottom: 24px;
+  }
+
+  &__sidebar {
+    @extend %col-35;
+
+    margin-left: 146px;
+  }
+
+  &__list {
+    @extend %block;
+
+    padding: 24px;
+  }
+
+  &__item:not(:last-child) {
+    margin-bottom: 8px;
+  }
+
+  &__item-link {
+    color: #E3833D;
+  }
+}
