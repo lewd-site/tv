@@ -21,7 +21,7 @@
     "vue-template-compiler": "^2.6.11"
   },
   "dependencies": {
-    "axios": "^0.19",
+    "axios": "^0.21",
     "hls.js": "^0.13.2",
     "laravel-echo": "^1.7.0",
     "normalize.css": "^8.0.1",
